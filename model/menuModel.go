@@ -29,7 +29,7 @@ type Menu struct {
 	Reviews []Review `bson:"reviews" json:"reviews"`
 }
 
-func NewMenuModel(db, host, model string) (*MenuModel, error) {
+func GetMenuModel(db, host, model string) (*MenuModel, error) {
 	m := &MenuModel{}
 	var err error
 
