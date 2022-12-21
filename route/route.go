@@ -12,8 +12,8 @@ type Router struct {
 
 func NewRouter(ctl *controller.Controller) *Router {
 	r := &Router{}
-	r.buyer = ctl.GetBuyer()
-	r.seller = ctl.GetSeller()
+	r.buyer = ctl.GetBuyerController()
+	r.seller = ctl.GetSellerController()
 
 	return r
 }
