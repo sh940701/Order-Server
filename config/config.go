@@ -8,10 +8,12 @@ import (
 type Config struct {
 	Server struct {
 		Mode string
-		port string
+		Port string
+		DBname string
+		Host string
 	}
 
-	DB map[string]map[string]interface{}
+	DB map[string]map[string]string
 }
 
 func GetConfig(fpath string) *Config {

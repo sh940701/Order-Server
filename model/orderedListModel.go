@@ -26,7 +26,7 @@ type OrderedList struct {
 	Orderedmenus []primitive.ObjectID `bson:"orderedmenus"`
 }
 
-func GetOrderedListModel(host, db, model string) (*OrderedListModel, error) {
+func GetOrderedListModel(db, host, model string) (*OrderedListModel, error) {
 	m := &OrderedListModel{}
 	var err error
 	

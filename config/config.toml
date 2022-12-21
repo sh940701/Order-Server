@@ -1,13 +1,11 @@
 [server]
 mode = "dev"
 port = ":8080"
-db = "order-system"
-
-[db] # data access object
-[db.menu]
+dbname = "order-system"
 host = "mongodb://localhost:27017"
+
+[db.menu] # 이중매핑구조 map[string]map[string]interface{}
 model = "menu"
 
 [db.orderedlist]
-host = "mongodb://localhost:27017"
 model = "orderedlist"
