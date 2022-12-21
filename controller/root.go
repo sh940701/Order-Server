@@ -17,10 +17,10 @@ func GetController(Om *model.OrderedListModel, Mm *model.MenuModel) *Controller 
 }
 
 // controller 객체 내의 buyer와 seller가 숨겨져있으므로, 함수를 통해서 사용할 수 있게 해주자
-func GetBuyer(c *Controller) *BuyerController {
+func (c *Controller) GetBuyer() *BuyerController {
 	return c.buyer
 }
 
-func GetSeller(c *Controller) *SellerController {
+func (c *Controller) GetSeller() *SellerController {
 	return c.seller
 }
