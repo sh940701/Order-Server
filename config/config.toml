@@ -1,0 +1,13 @@
+[server]
+mode = "dev"
+port = ":8080"
+db = "order-system"
+
+[db] # data access object
+[db.menu]
+host = "mongodb://localhost:27017"
+model = "menu"
+
+[db.orderedlist]
+host = "mongodb://localhost:27017"
+model = "orderedlist"
