@@ -39,3 +39,43 @@ func GetOrderedListModel(host, db, model string) (*OrderedListModel, error) {
 	}
 	return m, nil
 }
+
+// 주문내역 전체 리스트 가져오는 메서드
+func (o *OrderedListModel) GetAll() {
+
+}
+
+// 주문내역 하나만 가져오는 메서드
+func (o *OrderedListModel) GetOne() {
+
+}
+
+// 요청받은 주문의 진행상태 업데이트 하는 메서드
+func (o *OrderedListModel) UpdateStatus() {
+
+}
+
+// 주문내역의 리뷰 작성 여부 업데이트하는 메서드
+func (o *OrderedListModel) UpdateReviewable() {
+
+}
+
+// 주문을 추가하는 메서드
+func (o *OrderedListModel) Add() {
+
+}
+
+// 하루치 주문 번호 업데이트 하는 메서드
+func (o *OrderedListModel) UpdateDayOrderCount() {
+
+}
+
+// 주문 메뉴 변경하기
+func (o *OrderedListModel) ChangeOrder() {
+
+}
+
+// 주문 메뉴 추가하기
+func (o *OrderedListModel) AddOrder() {
+
+}

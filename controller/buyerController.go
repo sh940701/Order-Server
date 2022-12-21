@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/codestates/WBABEProject-08/commits/main/model"
+	"github.com/gin-gonic/gin"
 )
 
 type BuyerController struct {
@@ -13,4 +14,39 @@ func GetBuyerController(Om *model.OrderedListModel, Mm *model.MenuModel) *BuyerC
 	BuyerController := &BuyerController{OrderedListModel : Om, MenuModel : Mm}
 	
 	return BuyerController
+}
+
+// 메뉴 리스트를 조회하는 함수
+func (bc *BuyerController) GetMenuList(c *gin.Context) {
+
+}
+
+// 메뉴별 평점/리뷰 데이터 조회하는 함수
+func (bc *BuyerController) GetReview(c *gin.Context) {
+
+}
+
+// 현재 주문의 상태를 조회하는 함수
+func (bc *BuyerController) GetOrderStatus(c *gin.Context) {
+
+}
+
+// 메뉴에 대한 평점 및 리뷰를 작성하는 함수
+func (bc *BuyerController) AddReview(c *gin.Context) {
+
+}
+
+// 메뉴 선택 및 주문하는 함수
+func (bc *BuyerController) Order(c *gin.Context) {
+
+}
+
+// 메뉴 변경하는 함수
+func (bc *BuyerController) ChangeOrder(c *gin.Context) {
+
+}
+
+// 메뉴 추가하는 함수
+func (bc *BuyerController) AddOrder(c *gin.Context) {
+
 }

@@ -42,3 +42,34 @@ func GetMenuModel(db, host, model string) (*MenuModel, error) {
 	}
 	return m, nil
 }
+
+
+// DB에 메뉴 data를 추가하는 메서드
+func (m *MenuModel) Add() {
+
+}
+
+// DB 메뉴 data를 업데이트하는 메서드
+func (m *MenuModel) Update() {
+
+}
+
+// DB 메뉴 data를 삭제하는 메서드
+func (m *MenuModel) Delete() {
+
+}
+
+// 메뉴 리스트를 조회하는 메서드
+func (m *MenuModel) GetList() {
+
+}
+
+// 메뉴별 평점/리뷰 데이터 조회하는 메서드
+func (m *MenuModel) GetReview() {
+
+}
+
+// 메뉴별 평점/리뷰 데이터 추가하는 메서드
+func (m *MenuModel) AddReview() {
+	
+}
