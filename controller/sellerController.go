@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"fmt"
+	// "fmt"
 	"github.com/codestates/WBABEProject-08/commits/main/util"
 	"github.com/gin-gonic/gin"
 	"github.com/codestates/WBABEProject-08/commits/main/model"
@@ -21,7 +21,7 @@ func GetSellerController(Om *model.OrderedListModel, Mm *model.MenuModel) *Selle
 
 // 주문내역 리스트 조회하는 함수
 func (sc *SellerController) GetOrderList(c *gin.Context) {
-
+	
 }
 
 // 주문 요청에 대한 상태 업데이트 함수
@@ -34,8 +34,7 @@ func (sc *SellerController) AddMenu(c *gin.Context) {
 	body := c.Request.Body
 	byteData, err := io.ReadAll(body)
 	util.PanicHandler(err)
-	fmt.Println("row data: ", byteData)
-	fmt.Println("string data: ", string(byteData))
+
 	result, err := sc.MenuModel.Add(byteData)
 	if err != nil {
 		c.JSON(404, gin.H{"msg" : "실패하였습니다.", "err" : err})
@@ -46,7 +45,18 @@ func (sc *SellerController) AddMenu(c *gin.Context) {
 
 // 메뉴를 삭제하는 함수
 func (sc *SellerController) DeleteMenu(c *gin.Context) {
+	body := c.Request.Body
+	byteDate, err := io.ReadAll(body)
+	util.PanicHandler(err)
 
+	result, err := sc.MenuModel.Delete(byteDate)
+	if err != nil {
+		c.JSON(404, gin.H{"msg" : "실패하였습니다.", "err" : err})
+	} else if result == nil {
+		c.JSON(404, gin.H{"msg" : "실패하였습니다."})
+	} else {
+		c.JSON(200, gin.H{"msg" : "성공하였습니다."})
+	}
 }
 
 // 메뉴 정보를 수정하는 함수

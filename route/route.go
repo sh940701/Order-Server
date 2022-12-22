@@ -53,7 +53,7 @@ func (p *Router) Idx() *gin.Engine {
 	
 	bRoute := r.Group("/buyer")
 	{
-		bRoute.GET("/getlist/:category")
+		bRoute.GET("/getlist/:category", p.buyer.GetMenuList)
 		bRoute.GET("/getreview/:menu")
 		bRoute.GET("/ordered/:orderid")
 		bRoute.GET("/addreview")

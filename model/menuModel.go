@@ -3,7 +3,7 @@ package model
 import (
 	"go.mongodb.org/mongo-driver/bson"
 	"fmt"
-	// "github.com/codestates/WBABEProject-08/commits/main/util"
+	"github.com/codestates/WBABEProject-08/commits/main/util"
 	"encoding/json"
 	"context"
 
@@ -66,14 +66,7 @@ func (m *MenuModel) Add(data []byte) (primitive.ObjectID, error) {
 
 // DB 메뉴 data를 업데이트하는 메서드
 func (m *MenuModel) Update(data []byte) (interface{}, error) {
-	// unMarshared := new(map[string]interface{})
-	var unMarshared map[string]interface{}
-	json.Unmarshal(data, &unMarshared)
-
-	// id로 구분하려면, primitive.ObjectIDFromHex()함수를 사용해 형변환을 해줘야한다.
-	id, _ := primitive.ObjectIDFromHex(unMarshared["id"].(string))
-	key := unMarshared["key"].(string)
-	value := unMarshared["value"]
+	id, key, value := util.GetJsonIdKeyValue(data)
 	
 	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: key, Value: value}}}}
@@ -87,13 +80,30 @@ func (m *MenuModel) Update(data []byte) (interface{}, error) {
 }
 
 // DB 메뉴 data를 삭제하는 메서드
-func (m *MenuModel) Delete() {
+func (m *MenuModel) Delete(data []byte) (interface{}, error) {
+	id, _, _ := util.GetJsonIdKeyValue(data)
+	filter := bson.D{{Key: "_id", Value: id}}
+	result, err := m.Menucollection.DeleteOne(context.TODO(), filter)
 
+	if err != nil {
+		return nil, err
+	} else {
+		return result.DeletedCount, nil
+	}
 }
 
 // 메뉴 리스트를 조회하는 메서드
-func (m *MenuModel) GetList() {
+func (m *MenuModel) GetList(category string) []Menu {
+	menus := []Menu{}
+	filter := bson.D{}
 
+	opt := options.Find().SetSort(bson.D{{Key: category, Value: -1}})
+	cursor, err := m.Menucollection.Find(context.TODO(), filter, opt)
+	util.PanicHandler(err)
+	err = cursor.All(context.TODO(), &menus)
+	util.PanicHandler(err)
+
+	return menus
 }
 
 // 메뉴별 평점/리뷰 데이터 조회하는 메서드

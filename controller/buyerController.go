@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/codestates/WBABEProject-08/commits/main/model"
 	"github.com/gin-gonic/gin"
+	"fmt"
 )
 
 type BuyerController struct {
@@ -18,7 +19,11 @@ func GetBuyerController(Om *model.OrderedListModel, Mm *model.MenuModel) *BuyerC
 
 // 메뉴 리스트를 조회하는 함수
 func (bc *BuyerController) GetMenuList(c *gin.Context) {
+	category := c.Param("category")
+	fmt.Println("category: ", category)
+	result := bc.MenuModel.GetList(category)
 
+	c.JSON(200, gin.H{"result" : result})
 }
 
 // 메뉴별 평점/리뷰 데이터 조회하는 함수
