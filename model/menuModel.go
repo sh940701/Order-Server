@@ -21,6 +21,7 @@ type MenuModel struct {
 type Review struct {
 	Score int `bson:"score,omitemepty" json:"score"`
 	Review string `bson:"review,omitemepty" json:"review"`
+	OrderId primitive.ObjectID `bson:"orderid"`
 }
 
 type Menu struct {
@@ -31,6 +32,7 @@ type Menu struct {
 	Price int `bson:"price" json:"price"`
 	From string `bson:"from" json:"from"`
 	Orderedcount int `bson:"orderedcount" json:"orderedcount"`
+	Avg int `bson:"avg" json:"avg"`
 	Reviews []Review `bson:"reviews,omitemepty" json:"reviews"`
 }
 
@@ -112,8 +114,17 @@ func (m *MenuModel) GetReview() {
 }
 
 // 메뉴별 평점/리뷰 데이터 추가하는 메서드
-func (m *MenuModel) AddReview() {
-	
+func (m *MenuModel) AddReview(sfoodId string, review *Review) {
+	foodId, err := primitive.ObjectIDFromHex(sfoodId)
+	util.PanicHandler(err)
+
+	// 음식에 리뷰 추가하기
+	food, _ := m.GetOneMenu(foodId)
+	food.Reviews = append(food.Reviews, *review)
+	filter := bson.D{{Key: "_id", Value: foodId}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "reviews", Value: food.Reviews}}}}
+	_, err = m.Menucollection.UpdateOne(context.TODO(), filter, update)
+	util.PanicHandler(err)
 }
 
 // 메뉴의 limit을 1 줄여주고 count를 1 올려주는 함수

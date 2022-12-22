@@ -41,7 +41,30 @@ func (bc *BuyerController) GetOrderStatus(c *gin.Context) {
 
 // 메뉴에 대한 평점 및 리뷰를 작성하는 함수
 func (bc *BuyerController) AddReview(c *gin.Context) {
+	review := &model.Review{}
+	err := c.ShouldBindJSON(review)
+	if err != nil {
+		util.PanicHandler(err)
+	}
 
+	// 먼저 해당 주문에 대한 리뷰가 있는지 확인하고 있다면 멈춘다.
+	orderId := review.OrderId
+	order := bc.OrderedListModel.GetOne(orderId)
+	if order.IsReviewed {
+		c.JSON(200, gin.H{"msg" : "이미 후기가 작성된 주문입니다."})
+		return
+	}
+
+	// 음식에 리뷰를 추가한다.
+	foodId := c.Param("foodid")
+	bc.MenuModel.AddReview(foodId, review)
+
+	// 주문의 리뷰 작성 여부를 업데이트한다.
+	bc.OrderedListModel.UpdateReviewable(review.OrderId)
+
+	// 음식의 평균 점수를 계산하여 넣어준다.
+
+	c.JSON(200, gin.H{"msg" : "리뷰 작성이 완료되었습니다."})
 }
 
 // 메뉴 선택 및 주문하는 함수

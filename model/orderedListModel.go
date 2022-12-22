@@ -54,8 +54,13 @@ func (o *OrderedListModel) GetAll() {
 }
 
 // 주문내역 하나만 가져오는 메서드
-func (o *OrderedListModel) GetOne() {
+func (o *OrderedListModel) GetOne(id primitive.ObjectID) *OrderedList {
+	list := &OrderedList{}
+	
+	filter := bson.D{{Key: "_id", Value: id}}
+	o.Collection.FindOne(context.TODO(), filter).Decode(list)
 
+	return list
 }
 
 // 요청받은 주문의 진행상태 업데이트 하는 메서드
@@ -64,8 +69,11 @@ func (o *OrderedListModel) UpdateStatus() {
 }
 
 // 주문내역의 리뷰 작성 여부 업데이트하는 메서드
-func (o *OrderedListModel) UpdateReviewable() {
-
+func (o *OrderedListModel) UpdateReviewable(id primitive.ObjectID) {
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "isreviewed", Value: true}}}}
+	_, err := o.Collection.UpdateOne(context.TODO(), filter, update)
+	util.PanicHandler(err)
 }
 
 // 주문을 추가하는 메서드
