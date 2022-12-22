@@ -1,7 +1,10 @@
 package model
 
 import (
+	"github.com/codestates/WBABEProject-08/commits/main/util"
+	"go.mongodb.org/mongo-driver/bson"
 	"context"
+	// "fmt"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -14,16 +17,21 @@ type OrderedListModel struct {
 }
 
 type BuyerInfo struct {
-	Pnum int `bson:"pnum" json:"pnum"`
+	Pnum string `bson:"pnum" json:"pnum"`
 	Address string `bson:"address" json:"address"`
 }
 
 type OrderedList struct {
-	Id primitive.ObjectID `bson:"id" json:"id"`
+	ID primitive.ObjectID `bson:"_id,omitempty"`
 	IsReviewed bool `bson:"isreviewed" json:"isreviewed"`
 	Status string `bson:"status" json:"status"`
 	BuyerInfo BuyerInfo `bson:"buyerinfo" json:"buyerinfo"`
 	Orderedmenus []primitive.ObjectID `bson:"orderedmenus"`
+}
+
+type DayCounter struct {
+	ID primitive.ObjectID `bson:"_id,omitempty"`
+	Count int `bson:"daycount"`
 }
 
 func GetOrderedListModel(db, host, model string) (*OrderedListModel, error) {
@@ -61,8 +69,12 @@ func (o *OrderedListModel) UpdateReviewable() {
 }
 
 // 주문을 추가하는 메서드
-func (o *OrderedListModel) Add() {
-
+func (o *OrderedListModel) Add(list *OrderedList) primitive.ObjectID {
+	result, err := o.Collection.InsertOne(context.TODO(), list)
+	if err != nil {
+		util.PanicHandler(err)
+	}
+	return result.InsertedID.(primitive.ObjectID)
 }
 
 // 하루치 주문 번호 업데이트 하는 메서드
@@ -78,4 +90,27 @@ func (o *OrderedListModel) ChangeOrder() {
 // 주문 메뉴 추가하기
 func (o *OrderedListModel) AddOrder() {
 
+}
+
+// 일별 주문 count +1 해주는 함수
+func (o *OrderedListModel) DayOrderCount(sid string) int {
+	// string을 objectId 타입으로 바꿔줌
+	id, err := primitive.ObjectIDFromHex(sid)
+	util.PanicHandler(err)
+	filter := bson.D{{Key: "_id", Value: id}}
+	counter := &DayCounter{}
+
+	// 오늘 주문량을 가져오고
+	o.Collection.FindOne(context.TODO(), filter).Decode(counter)
+	// 변수에 담고
+	num := counter.Count
+	// +1로 업데이트한다.
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "daycount", Value: num + 1}}}}
+
+	_, err = o.Collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		util.PanicHandler(err)
+	}
+	// 오늘 주문량 반환
+	return num
 }

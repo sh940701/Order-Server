@@ -115,3 +115,38 @@ func (m *MenuModel) GetReview() {
 func (m *MenuModel) AddReview() {
 	
 }
+
+// 메뉴의 limit을 1 줄여주고 count를 1 올려주는 함수
+func (m *MenuModel) LimitAndCountUpdate(id primitive.ObjectID, limit, count int) {
+	var update bson.D
+	filter := bson.D{{Key: "_id", Value: id}}
+	if limit != 1 {
+		update = bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "limit", Value : limit - 1}, 
+				{Key: "orderedcount", Value: count + 1}}}}
+	} else {
+		update = bson.D{
+			{Key: "$set", Value: bson.D{
+				{Key: "limit", Value : limit - 1}, 
+				{Key: "orderedcount", Value: count + 1}, 
+				{Key: "orderable", Value: false}}}}
+	}
+	_, err := m.Menucollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		util.PanicHandler(err)
+	}
+}
+
+
+// 메뉴를 하나만 찾아주는 함수
+func (m *MenuModel) GetOneMenu(id primitive.ObjectID) (*Menu, error) {
+	menu := &Menu{}
+	filter := bson.D{{Key: "_id", Value: id}}
+	err := m.Menucollection.FindOne(context.TODO(), filter).Decode(menu)
+	if err != nil {
+		return nil, err
+	} else {
+		return menu, nil
+	}
+}

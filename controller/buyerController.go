@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"github.com/codestates/WBABEProject-08/commits/main/util"
 	"github.com/codestates/WBABEProject-08/commits/main/model"
 	"github.com/gin-gonic/gin"
 	"fmt"
 )
+
+const daycountId = "63a488f6165051c3589bcbe4"
 
 type BuyerController struct {
 	OrderedListModel *model.OrderedListModel
@@ -43,6 +46,29 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 
 // 메뉴 선택 및 주문하는 함수
 func (bc *BuyerController) Order(c *gin.Context) {
+	list := &model.OrderedList{}
+	err := c.ShouldBindJSON(list)
+	util.PanicHandler(err)
+
+	// 주문하기 전에 메뉴가 주문 가능한지 확인
+	menu, err := bc.MenuModel.GetOneMenu(list.Orderedmenus[0])
+	if err != nil {
+		c.JSON(404, gin.H{"error" : err})
+		return
+	} else if !menu.Orderable {
+		c.JSON(200, gin.H{"msg" : "현재 주문이 불가능합니다."})
+		return
+	} else {
+		// 있다면 limit -1, count +1
+		bc.MenuModel.LimitAndCountUpdate(menu.ID, menu.Limit, menu.Orderedcount)
+		// 그리고 DayOrderCount 1 추가
+		dayCount := bc.OrderedListModel.DayOrderCount(daycountId)
+		// 주문 추가
+		orderNum := bc.OrderedListModel.Add(list)
+
+		c.JSON(200, gin.H{"주문아이디" : orderNum, "오늘 주문번호" : dayCount})
+	}
+	
 
 }
 
