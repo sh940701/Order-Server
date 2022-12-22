@@ -36,10 +36,12 @@ func (sc *SellerController) AddMenu(c *gin.Context) {
 	util.PanicHandler(err)
 	fmt.Println("row data: ", byteData)
 	fmt.Println("string data: ", string(byteData))
-	result := sc.MenuModel.Add(byteData)
-
-	fmt.Println("insertedId: ", result)
-	c.JSON(200, gin.H{"result" : result})
+	result, err := sc.MenuModel.Add(byteData)
+	if err != nil {
+		c.JSON(404, gin.H{"msg" : "실패하였습니다.", "err" : err})
+	} else {
+		c.JSON(200, gin.H{"msg" : "성공하였습니다.", "id" : result})
+	}
 }
 
 // 메뉴를 삭제하는 함수
@@ -49,5 +51,18 @@ func (sc *SellerController) DeleteMenu(c *gin.Context) {
 
 // 메뉴 정보를 수정하는 함수
 func (sc *SellerController) UpdateMenu(c *gin.Context) {
+	body := c.Request.Body
+	data, err := io.ReadAll(body)
+	util.PanicHandler(err)
+
+	result, err := sc.MenuModel.Update(data)
+
+	if err != nil {
+		c.JSON(404, gin.H{"msg" : "실패하였습니다.", "err" : err})
+	} else if result == nil {
+		c.JSON(404, gin.H{"msg" : "실패하였습니다."})
+	} else {
+		c.JSON(200, gin.H{"msg" : "성공하였습니다."})
+	}
 
 }

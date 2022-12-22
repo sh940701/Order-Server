@@ -1,10 +1,12 @@
 package model
 
 import (
+	"go.mongodb.org/mongo-driver/bson"
 	"fmt"
-	"github.com/codestates/WBABEProject-08/commits/main/util"
+	// "github.com/codestates/WBABEProject-08/commits/main/util"
 	"encoding/json"
 	"context"
+
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -22,7 +24,7 @@ type Review struct {
 }
 
 type Menu struct {
-	_Id primitive.ObjectID `bson:"id"`
+	ID primitive.ObjectID `bson:"_id,omitempty"`
 	Name string `bson:"name" json:"name"`
 	Orderable bool `bson:"orderable" json:"orderable"`
 	Limit int `bson:"limit" json:"limit"`
@@ -48,21 +50,40 @@ func GetMenuModel(db, host, model string) (*MenuModel, error) {
 
 
 // DB에 메뉴 data를 추가하는 메서드
-func (m *MenuModel) Add(data []byte) interface{} {
+func (m *MenuModel) Add(data []byte) (primitive.ObjectID, error) {
 	newMenu := &Menu{}
 	json.Unmarshal(data, newMenu)
 
 	fmt.Println("Unmarshar: ", newMenu)
 
 	result, err := m.Menucollection.InsertOne(context.TODO(), newMenu)
-	util.PanicHandler(err)
-
-	return result.InsertedID
+	if err != nil {
+		return result.InsertedID.(primitive.ObjectID), err
+	} else {
+		return result.InsertedID.(primitive.ObjectID), nil
+	}
 }
 
 // DB 메뉴 data를 업데이트하는 메서드
-func (m *MenuModel) Update() {
+func (m *MenuModel) Update(data []byte) (interface{}, error) {
+	// unMarshared := new(map[string]interface{})
+	var unMarshared map[string]interface{}
+	json.Unmarshal(data, &unMarshared)
 
+	// id로 구분하려면, primitive.ObjectIDFromHex()함수를 사용해 형변환을 해줘야한다.
+	id, _ := primitive.ObjectIDFromHex(unMarshared["id"].(string))
+	key := unMarshared["key"].(string)
+	value := unMarshared["value"]
+	
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: key, Value: value}}}}
+
+	result, err := m.Menucollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return result.MatchedCount, err
+	} else {
+		return result.MatchedCount, nil
+	}
 }
 
 // DB 메뉴 data를 삭제하는 메서드
