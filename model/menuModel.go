@@ -120,6 +120,7 @@ func (m *MenuModel) AddReview(sfoodId string, review *Review) {
 
 	// 음식에 리뷰 추가하기
 	food, _ := m.GetOneMenu(foodId)
+	fmt.Println(food)
 	food.Reviews = append(food.Reviews, *review)
 	filter := bson.D{{Key: "_id", Value: foodId}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "reviews", Value: food.Reviews}}}}
@@ -160,4 +161,25 @@ func (m *MenuModel) GetOneMenu(id primitive.ObjectID) (*Menu, error) {
 	} else {
 		return menu, nil
 	}
+}
+
+// 음식 평점의 평균을 구해주는 함수
+func (m *MenuModel) CalcAvg(sid string) {
+	id, err := primitive.ObjectIDFromHex(sid)
+	util.PanicHandler(err)
+	menu, _ := m.GetOneMenu(id)
+
+	avg := 0.0;
+
+	for _, review := range menu.Reviews {
+		avg += float64(review.Score)
+	}
+
+	avg /= float64(len(menu.Reviews))
+
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "avg", Value: avg}}}}
+	_, err = m.Menucollection.UpdateOne(context.TODO(), filter, update)
+
+	util.PanicHandler(err)
 }

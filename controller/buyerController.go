@@ -46,7 +46,7 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 	if err != nil {
 		util.PanicHandler(err)
 	}
-
+	// fmt.Println(review)
 	// 먼저 해당 주문에 대한 리뷰가 있는지 확인하고 있다면 멈춘다.
 	orderId := review.OrderId
 	order := bc.OrderedListModel.GetOne(orderId)
@@ -63,6 +63,7 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 	bc.OrderedListModel.UpdateReviewable(review.OrderId)
 
 	// 음식의 평균 점수를 계산하여 넣어준다.
+	bc.MenuModel.CalcAvg(foodId)
 
 	c.JSON(200, gin.H{"msg" : "리뷰 작성이 완료되었습니다."})
 }
