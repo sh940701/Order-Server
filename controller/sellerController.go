@@ -1,8 +1,11 @@
 package controller
 
 import (
+	"fmt"
+	"github.com/codestates/WBABEProject-08/commits/main/util"
 	"github.com/gin-gonic/gin"
 	"github.com/codestates/WBABEProject-08/commits/main/model"
+	"io"
 )
 
 type SellerController struct {
@@ -28,7 +31,15 @@ func (sc *SellerController) UpdateOrderStatus(c *gin.Context) {
 
 // 새 메뉴를 추가하는 함수
 func (sc *SellerController) AddMenu(c *gin.Context) {
+	body := c.Request.Body
+	byteData, err := io.ReadAll(body)
+	util.PanicHandler(err)
+	fmt.Println("row data: ", byteData)
+	fmt.Println("string data: ", string(byteData))
+	result := sc.MenuModel.Add(byteData)
 
+	fmt.Println("insertedId: ", result)
+	c.JSON(200, gin.H{"result" : result})
 }
 
 // 메뉴를 삭제하는 함수
