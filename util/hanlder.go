@@ -32,3 +32,10 @@ func GetJsonIdKeyValue(data []byte) (primitive.ObjectID, string, interface{}) {
 
 	return id, key, value
 }
+
+func ConvertStringToObjectId(sId string) primitive.ObjectID {
+	id, err := primitive.ObjectIDFromHex(sId)
+	PanicHandler(err)
+
+	return id
+}
