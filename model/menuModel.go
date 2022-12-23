@@ -32,7 +32,7 @@ type Menu struct {
 	Price int `bson:"price" json:"price"`
 	From string `bson:"from" json:"from"`
 	Orderedcount int `bson:"orderedcount" json:"orderedcount"`
-	Avg int `bson:"avg" json:"avg"`
+	Avg float64 `bson:"avg" json:"avg"`
 	Reviews []Review `bson:"reviews,omitemepty" json:"reviews"`
 }
 

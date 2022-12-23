@@ -21,7 +21,10 @@ func GetSellerController(Om *model.OrderedListModel, Mm *model.MenuModel) *Selle
 
 // 주문내역 리스트 조회하는 함수
 func (sc *SellerController) GetOrderList(c *gin.Context) {
-	
+	// 전체 주문내역 리스트를 가져온다.
+	result := sc.OrderedListModel.GetAll(daycountId)
+
+	c.JSON(200, gin.H{"주문 목록" : result})
 }
 
 // 주문 요청에 대한 상태 업데이트 함수

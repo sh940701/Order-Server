@@ -49,8 +49,18 @@ func GetOrderedListModel(db, host, model string) (*OrderedListModel, error) {
 }
 
 // 주문내역 전체 리스트 가져오는 메서드
-func (o *OrderedListModel) GetAll() {
+func (o *OrderedListModel) GetAll(exceptId string) *[]OrderedList {
+	// 주문내역 리스트에는 daycount document도 있으므로, 이를 제외하고 가져온다.
+	exId, err := primitive.ObjectIDFromHex(exceptId)
+	util.PanicHandler(err)
 
+	list := []OrderedList{}
+	filter := bson.D{{Key: "_id", Value: bson.D{{Key: "$ne", Value: exId}}}}
+	cursor, err := o.Collection.Find(context.TODO(), filter)
+	util.PanicHandler(err)
+	cursor.All(context.TODO(), &list)
+
+	return &list
 }
 
 // 주문내역 하나만 가져오는 메서드
