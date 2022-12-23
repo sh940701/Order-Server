@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"context"
 	"fmt"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -122,8 +123,24 @@ func (o *OrderedListModel) Add(list *OrderedList) primitive.ObjectID {
 
 
 // 주문 메뉴 변경하기
-func (o *OrderedListModel) ChangeOrder() {
+func (o *OrderedListModel) ChangeOrder(order *OrderedList, change *ChangeMenuStruct) error {
+	isChanged := false
+	// 먼저 변경하고싶은 메뉴가 orderlist에 있는지 확인한다.
+	for idx, value := range order.Orderedmenus {
+		if value == change.LegacyFoodId {
+			order.Orderedmenus[idx] = change.NewFoodId
+			isChanged = true
+		}
+	}
+	if !isChanged {
+		return errors.New("주문 내역에 해당 메뉴가 존재하지 않습니다")
+	}
+	filter := bson.D{{Key: "_id", Value: change.OrderId}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "orderedmenus", Value: order.Orderedmenus}}}}
+	_, err := o.Collection.UpdateOne(context.TODO(), filter, update)
+	util.PanicHandler(err)
 
+	return nil
 }
 
 

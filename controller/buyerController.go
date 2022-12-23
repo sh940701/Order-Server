@@ -40,7 +40,7 @@ func (bc *BuyerController) GetReview(c *gin.Context) {
 		c.JSON(404, gin.H{"error" : err})
 		return
 	} else if len(menu.Reviews) == 0 {
-		c.JSON(200, gin.H{"msg" : "현재 리뷰가 없습니다."})
+		c.JSON(400, gin.H{"msg" : "현재 리뷰가 없습니다."})
 		return
 	} 
 	c.JSON(200, gin.H{"평점" : menu.Avg, "리뷰" : menu.Reviews})
@@ -53,7 +53,7 @@ func (bc *BuyerController) GetOrderStatus(c *gin.Context) {
 	order := bc.OrderedListModel.GetOne(orderId)
 	// 존재하지 않는 id를 입력했을때의 처리
 	if len(order.Orderedmenus) == 0 {
-		c.JSON(200, gin.H{"msg" : "존재하지 않는 주문입니다."})
+		c.JSON(400, gin.H{"msg" : "존재하지 않는 주문입니다."})
 		return
 	} else {
 		c.JSON(200, gin.H{"현재 주문 상태" : order.Status})
@@ -73,7 +73,7 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 	orderId := review.OrderId
 	order := bc.OrderedListModel.GetOne(orderId)
 	if order.IsReviewed {
-		c.JSON(200, gin.H{"msg" : "이미 후기가 작성된 주문입니다."})
+		c.JSON(400, gin.H{"msg" : "이미 후기가 작성된 주문입니다."})
 		return
 	}
 
@@ -103,7 +103,7 @@ func (bc *BuyerController) Order(c *gin.Context) {
 		c.JSON(404, gin.H{"error" : err})
 		return
 	} else if !menu.Orderable {
-		c.JSON(200, gin.H{"msg" : "현재 주문이 불가능합니다."})
+		c.JSON(400, gin.H{"msg" : "현재 주문이 불가능합니다."})
 		return
 	} else {
 		// 있다면 limit -1, count +1
@@ -122,7 +122,21 @@ func (bc *BuyerController) Order(c *gin.Context) {
 
 // 메뉴 변경하는 함수
 func (bc *BuyerController) ChangeOrder(c *gin.Context) {
+	changeMenuStruct := &model.ChangeMenuStruct{}
+	err := c.ShouldBindJSON(changeMenuStruct)
+	util.PanicHandler(err)
 
+	order := bc.OrderedListModel.GetOne(changeMenuStruct.OrderId)
+	if (order.Status == "배달중") || (order.Status == "배달완료") {
+		c.JSON(400, gin.H{"msg" : "조리가 완료되어 메뉴 변경이 불가능합니다."})
+	} else {
+		err := bc.OrderedListModel.ChangeOrder(order, changeMenuStruct)
+		if err != nil {
+			c.JSON(400, gin.H{"error" : err.Error()})
+		} else {
+			c.JSON(200, gin.H{"msg" : "메뉴 변경이 완료되었습니다."})
+		}
+	}
 }
 
 

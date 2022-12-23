@@ -58,8 +58,8 @@ func (p *Router) Idx() *gin.Engine {
 		bRoute.GET("/ordered/:orderid", p.buyer.GetOrderStatus)
 		bRoute.POST("/addreview/:foodid", p.buyer.AddReview)
 		bRoute.POST("/order", p.buyer.Order)
-		bRoute.POST("/changeorder", p.buyer.AddOrder)
-		bRoute.GET("/addorder")
+		bRoute.PUT("/addorder", p.buyer.AddOrder)
+		bRoute.PUT("/changeorder", p.buyer.ChangeOrder)
 
 	}
 
