@@ -122,7 +122,7 @@ func (bc *BuyerController) Order(c *gin.Context) {
 
 // 메뉴 변경하는 함수
 func (bc *BuyerController) ChangeOrder(c *gin.Context) {
-	changeMenuStruct := &model.ChangeMenuStruct{}
+	changeMenuStruct := &model.ChangeMenuType{}
 	err := c.ShouldBindJSON(changeMenuStruct)
 	util.PanicHandler(err)
 
@@ -145,7 +145,7 @@ func (bc *BuyerController) AddOrder(c *gin.Context) {
 	var msg string
 	var id primitive.ObjectID
 
-	addStruct := model.AddMenuStruct{}
+	addStruct := model.AddMenuType{}
 	err := c.ShouldBindJSON(&addStruct)
 	util.PanicHandler(err)
 

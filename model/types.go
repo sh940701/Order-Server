@@ -5,7 +5,7 @@ import (
 )
 
 // 메뉴를 추가할 때 body에 해당하는 구조체
-type AddMenuStruct struct {
+type AddMenuType struct {
 	NewOrder OrderedList `json:"neworder"`
 	NewItem primitive.ObjectID `json:"newitem"`
 	OrderId primitive.ObjectID `json:"orderid"`
@@ -13,8 +13,12 @@ type AddMenuStruct struct {
 
 
 // 메뉴를 변경할 때 body에 해당하는 구조체
-type ChangeMenuStruct struct {
+type ChangeMenuType struct {
 	OrderId primitive.ObjectID `json:"orderid"`
 	LegacyFoodId primitive.ObjectID `json:"legacyfoodid"`
 	NewFoodId primitive.ObjectID `json:"newfoodid"`
+}
+
+type SuggestionType struct {
+	Ids []primitive.ObjectID `json:"ids"`
 }

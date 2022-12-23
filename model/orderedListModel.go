@@ -123,7 +123,7 @@ func (o *OrderedListModel) Add(list *OrderedList) primitive.ObjectID {
 
 
 // 주문 메뉴 변경하기
-func (o *OrderedListModel) ChangeOrder(order *OrderedList, change *ChangeMenuStruct) error {
+func (o *OrderedListModel) ChangeOrder(order *OrderedList, change *ChangeMenuType) error {
 	isChanged := false
 	// 먼저 변경하고싶은 메뉴가 orderlist에 있는지 확인한다.
 	for idx, value := range order.Orderedmenus {
@@ -145,7 +145,7 @@ func (o *OrderedListModel) ChangeOrder(order *OrderedList, change *ChangeMenuStr
 
 
 // 주문 메뉴 추가하기
-func (o *OrderedListModel) AddOrder(addStruct *AddMenuStruct, legacyOrder *OrderedList) primitive.ObjectID {
+func (o *OrderedListModel) AddOrder(addStruct *AddMenuType, legacyOrder *OrderedList) primitive.ObjectID {
 	// 추가하고자 하는 음식의 아이디를 이전 주문의 음식 배열에 넣어주는 로직
 	filter := bson.D{{Key: "_id", Value: addStruct.OrderId}}
 	legacyOrder.Orderedmenus = append(legacyOrder.Orderedmenus, addStruct.NewItem)

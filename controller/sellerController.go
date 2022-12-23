@@ -87,3 +87,17 @@ func (sc *SellerController) UpdateMenu(c *gin.Context) {
 		c.JSON(200, gin.H{"msg" : "성공하였습니다."})
 	}
 }
+
+
+// 추천메뉴를 변경하는 함수
+func (sc *SellerController) SuggestMenu(c *gin.Context) {
+	var suggestion model.SuggestionType
+	c.ShouldBindJSON(&suggestion)
+
+	err := sc.MenuModel.SuggestionUpdate(&suggestion)
+	if err != nil {
+		c.JSON(400, gin.H{"error" : err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"msg" : "추천메뉴 업데이트가 완료되었습니다."})
+}

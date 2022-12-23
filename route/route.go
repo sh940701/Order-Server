@@ -42,24 +42,25 @@ func (p *Router) Idx() *gin.Engine {
 	r.Use(gin.Recovery())
 	r.Use(CORS())
 
-	sRoute := r.Group("/seller")
+	sGroup := r.Group("/seller")
 	{
-		sRoute.GET("/orderlist", p.seller.GetOrderList)
-		sRoute.GET("/statusupdate/:orderid", p.seller.UpdateOrderStatus)
-		sRoute.POST("/addmenu", p.seller.AddMenu)
-		sRoute.POST("/delete", p.seller.DeleteMenu)
-		sRoute.PUT("/updatemenu", p.seller.UpdateMenu)
+		sGroup.GET("/orderlist", p.seller.GetOrderList)
+		sGroup.GET("/statusupdate/:orderid", p.seller.UpdateOrderStatus)
+		sGroup.POST("/addmenu", p.seller.AddMenu)
+		sGroup.POST("/delete", p.seller.DeleteMenu)
+		sGroup.PUT("/updatemenu", p.seller.UpdateMenu)
+		sGroup.PATCH("/suggestion", p.seller.SuggestMenu)
 	}
 	
-	bRoute := r.Group("/buyer")
+	bGroup := r.Group("/buyer")
 	{
-		bRoute.GET("/getlist/:category", p.buyer.GetMenuList)
-		bRoute.GET("/getreview/:menuid", p.buyer.GetReview)
-		bRoute.GET("/ordered/:orderid", p.buyer.GetOrderStatus)
-		bRoute.POST("/addreview/:foodid", p.buyer.AddReview)
-		bRoute.POST("/order", p.buyer.Order)
-		bRoute.PUT("/addorder", p.buyer.AddOrder)
-		bRoute.PUT("/changeorder", p.buyer.ChangeOrder)
+		bGroup.GET("/getlist/:category", p.buyer.GetMenuList)
+		bGroup.GET("/getreview/:menuid", p.buyer.GetReview)
+		bGroup.GET("/ordered/:orderid", p.buyer.GetOrderStatus)
+		bGroup.POST("/addreview/:foodid", p.buyer.AddReview)
+		bGroup.POST("/order", p.buyer.Order)
+		bGroup.PUT("/addorder", p.buyer.AddOrder)
+		bGroup.PUT("/changeorder", p.buyer.ChangeOrder)
 
 	}
 
