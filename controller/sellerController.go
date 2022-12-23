@@ -29,7 +29,11 @@ func (sc *SellerController) GetOrderList(c *gin.Context) {
 
 // 주문 요청에 대한 상태 업데이트 함수
 func (sc *SellerController) UpdateOrderStatus(c *gin.Context) {
-
+	orderId := util.ConvertStringToObjectId(c.Param("orderid"))
+	order := sc.OrderedListModel.GetOne(orderId)
+	
+	msg := sc.OrderedListModel.UpdateStatus(order)
+	c.JSON(200, gin.H{"msg" : msg})
 }
 
 // 새 메뉴를 추가하는 함수

@@ -4,7 +4,7 @@ import (
 	"github.com/codestates/WBABEProject-08/commits/main/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"context"
-	// "fmt"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -73,9 +73,29 @@ func (o *OrderedListModel) GetOne(id primitive.ObjectID) *OrderedList {
 	return list
 }
 
-// 요청받은 주문의 진행상태 업데이트 하는 메서드
-func (o *OrderedListModel) UpdateStatus() {
+// 주문의 진행상태 업데이트 하는 메서드
+func (o *OrderedListModel) UpdateStatus(order *OrderedList) string {
+	// 배달 완료된 상태이면 return
+	if order.Status == "배달완료" {
+		return "이미 완료된 주문입니다."
+	}
 
+	// 현재 상태에 따른 업데이트 진행
+	var status string
+	if order.Status == "주문접수" {
+		status = "조리중"
+	} else if order.Status == "조리중" {
+		status = "배달중"
+	} else if order.Status == "배달중" {
+		status = "배달완료"
+	} 
+	filter := bson.D{{Key: "_id", Value: order.ID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "status", Value: status}}}}
+	_, err := o.Collection.UpdateOne(context.TODO(), filter, update)
+	util.PanicHandler(err)
+
+	s := fmt.Sprintf("상태가 %s으로 변경되었습니다.", status)
+	return s
 }
 
 // 주문내역의 리뷰 작성 여부 업데이트하는 메서드
