@@ -19,6 +19,7 @@ func GetSellerController(Om *model.OrderedListModel, Mm *model.MenuModel) *Selle
 	return SellerController
 }
 
+
 // 주문내역 리스트 조회하는 함수
 func (sc *SellerController) GetOrderList(c *gin.Context) {
 	// 전체 주문내역 리스트를 가져온다.
@@ -26,6 +27,7 @@ func (sc *SellerController) GetOrderList(c *gin.Context) {
 
 	c.JSON(200, gin.H{"주문 목록" : result})
 }
+
 
 // 주문 요청에 대한 상태 업데이트 함수
 func (sc *SellerController) UpdateOrderStatus(c *gin.Context) {
@@ -35,6 +37,7 @@ func (sc *SellerController) UpdateOrderStatus(c *gin.Context) {
 	msg := sc.OrderedListModel.UpdateStatus(order)
 	c.JSON(200, gin.H{"msg" : msg})
 }
+
 
 // 새 메뉴를 추가하는 함수
 func (sc *SellerController) AddMenu(c *gin.Context) {
@@ -49,6 +52,7 @@ func (sc *SellerController) AddMenu(c *gin.Context) {
 		c.JSON(200, gin.H{"msg" : "성공하였습니다.", "id" : result})
 	}
 }
+
 
 // 메뉴를 삭제하는 함수
 func (sc *SellerController) DeleteMenu(c *gin.Context) {
@@ -66,6 +70,7 @@ func (sc *SellerController) DeleteMenu(c *gin.Context) {
 	}
 }
 
+
 // 메뉴 정보를 수정하는 함수
 func (sc *SellerController) UpdateMenu(c *gin.Context) {
 	body := c.Request.Body
@@ -81,5 +86,4 @@ func (sc *SellerController) UpdateMenu(c *gin.Context) {
 	} else {
 		c.JSON(200, gin.H{"msg" : "성공하였습니다."})
 	}
-
 }

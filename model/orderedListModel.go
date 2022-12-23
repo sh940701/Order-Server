@@ -48,6 +48,7 @@ func GetOrderedListModel(db, host, model string) (*OrderedListModel, error) {
 	return m, nil
 }
 
+
 // 주문내역 전체 리스트 가져오는 메서드
 func (o *OrderedListModel) GetAll(exceptId string) *[]OrderedList {
 	// 주문내역 리스트에는 daycount document도 있으므로, 이를 제외하고 가져온다.
@@ -63,6 +64,7 @@ func (o *OrderedListModel) GetAll(exceptId string) *[]OrderedList {
 	return &list
 }
 
+
 // 주문내역 하나만 가져오는 메서드
 func (o *OrderedListModel) GetOne(id primitive.ObjectID) *OrderedList {
 	list := &OrderedList{}
@@ -72,6 +74,7 @@ func (o *OrderedListModel) GetOne(id primitive.ObjectID) *OrderedList {
 
 	return list
 }
+
 
 // 주문의 진행상태 업데이트 하는 메서드
 func (o *OrderedListModel) UpdateStatus(order *OrderedList) string {
@@ -98,6 +101,7 @@ func (o *OrderedListModel) UpdateStatus(order *OrderedList) string {
 	return s
 }
 
+
 // 주문내역의 리뷰 작성 여부 업데이트하는 메서드
 func (o *OrderedListModel) UpdateReviewable(id primitive.ObjectID) {
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -105,6 +109,7 @@ func (o *OrderedListModel) UpdateReviewable(id primitive.ObjectID) {
 	_, err := o.Collection.UpdateOne(context.TODO(), filter, update)
 	util.PanicHandler(err)
 }
+
 
 // 주문을 추가하는 메서드
 func (o *OrderedListModel) Add(list *OrderedList) primitive.ObjectID {
@@ -115,20 +120,25 @@ func (o *OrderedListModel) Add(list *OrderedList) primitive.ObjectID {
 	return result.InsertedID.(primitive.ObjectID)
 }
 
-// 하루치 주문 번호 업데이트 하는 메서드
-func (o *OrderedListModel) UpdateDayOrderCount() {
-
-}
 
 // 주문 메뉴 변경하기
 func (o *OrderedListModel) ChangeOrder() {
 
 }
 
-// 주문 메뉴 추가하기
-func (o *OrderedListModel) AddOrder() {
 
+// 주문 메뉴 추가하기
+func (o *OrderedListModel) AddOrder(addStruct *AddMenuStruct, legacyOrder *OrderedList) primitive.ObjectID {
+	// 추가하고자 하는 음식의 아이디를 이전 주문의 음식 배열에 넣어주는 로직
+	filter := bson.D{{Key: "_id", Value: addStruct.OrderId}}
+	legacyOrder.Orderedmenus = append(legacyOrder.Orderedmenus, addStruct.NewItem)
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "orderedmenus", Value: legacyOrder.Orderedmenus}}}}
+	_, err := o.Collection.UpdateOne(context.TODO(), filter, update)
+	util.PanicHandler(err)
+
+	return addStruct.OrderId
 }
+
 
 // 일별 주문 count +1 해주는 함수
 func (o *OrderedListModel) DayOrderCount(sid string) int {
@@ -146,9 +156,8 @@ func (o *OrderedListModel) DayOrderCount(sid string) int {
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "daycount", Value: num + 1}}}}
 
 	_, err = o.Collection.UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		util.PanicHandler(err)
-	}
+	util.PanicHandler(err)
+	
 	// 오늘 주문량 반환
 	return num
 }

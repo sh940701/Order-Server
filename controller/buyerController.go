@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"github.com/codestates/WBABEProject-08/commits/main/util"
 	"github.com/codestates/WBABEProject-08/commits/main/model"
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ func GetBuyerController(Om *model.OrderedListModel, Mm *model.MenuModel) *BuyerC
 	return BuyerController
 }
 
+
 // 메뉴 리스트를 조회하는 함수
 func (bc *BuyerController) GetMenuList(c *gin.Context) {
 	category := c.Param("category")
@@ -28,6 +30,7 @@ func (bc *BuyerController) GetMenuList(c *gin.Context) {
 
 	c.JSON(200, gin.H{"result" : result})
 }
+
 
 // 메뉴별 평점/리뷰 데이터 조회하는 함수
 func (bc *BuyerController) GetReview(c *gin.Context) {
@@ -43,6 +46,7 @@ func (bc *BuyerController) GetReview(c *gin.Context) {
 	c.JSON(200, gin.H{"평점" : menu.Avg, "리뷰" : menu.Reviews})
 }
 
+
 // 현재 주문의 상태를 조회하는 함수
 func (bc *BuyerController) GetOrderStatus(c *gin.Context) {
 	orderId := util.ConvertStringToObjectId(c.Param("orderid"))
@@ -55,6 +59,7 @@ func (bc *BuyerController) GetOrderStatus(c *gin.Context) {
 		c.JSON(200, gin.H{"현재 주문 상태" : order.Status})
 	}
 }
+
 
 // 메뉴에 대한 평점 및 리뷰를 작성하는 함수
 func (bc *BuyerController) AddReview(c *gin.Context) {
@@ -85,6 +90,7 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 	c.JSON(200, gin.H{"msg" : "리뷰 작성이 완료되었습니다."})
 }
 
+
 // 메뉴 선택 및 주문하는 함수
 func (bc *BuyerController) Order(c *gin.Context) {
 	list := &model.OrderedList{}
@@ -113,12 +119,30 @@ func (bc *BuyerController) Order(c *gin.Context) {
 
 }
 
+
 // 메뉴 변경하는 함수
 func (bc *BuyerController) ChangeOrder(c *gin.Context) {
 
 }
 
+
 // 메뉴 추가하는 함수
 func (bc *BuyerController) AddOrder(c *gin.Context) {
+	var msg string
+	var id primitive.ObjectID
 
+	addStruct := model.AddMenuStruct{}
+	err := c.ShouldBindJSON(&addStruct)
+	util.PanicHandler(err)
+
+	// 해당 주문의 현재 상태를 검사한다.
+	order := bc.OrderedListModel.GetOne(addStruct.OrderId)
+	if (order.Status == "배달중") || (order.Status == "배달완료") {
+		id = bc.OrderedListModel.Add(&addStruct.NewOrder)
+		msg = "주문 추가가 불가능하여 새 주문으로 접수되었습니다."
+	} else {
+		id = bc.OrderedListModel.AddOrder(&addStruct, order)
+		msg = "주문 추가가 정상적으로 완료되었습니다."
+	}
+	c.JSON(200, gin.H{"msg" : msg, "id" : id})
 }
