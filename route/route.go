@@ -44,24 +44,38 @@ func (p *Router) Idx() *gin.Engine {
 
 	sGroup := r.Group("/seller")
 	{
-		sGroup.GET("/orderlist", p.seller.GetOrderList)
-		sGroup.GET("/statusupdate/:orderid", p.seller.UpdateOrderStatus)
-		sGroup.POST("/addmenu", p.seller.AddMenu)
+		// 전체 주문 목록 가져오기
+		sGroup.GET("/order", p.seller.GetOrderList)
+		// 주문 상태 변경
+		sGroup.PATCH("/order", p.seller.UpdateOrderStatus)
+		// 메뉴 추가하기
+		sGroup.POST("/menu", p.seller.AddMenu)
+		// 메뉴 업데이트하기
+		sGroup.PATCH("/menu", p.seller.UpdateMenu)
+		// 메뉴 지우기
 		sGroup.POST("/delete", p.seller.DeleteMenu)
-		sGroup.PUT("/updatemenu", p.seller.UpdateMenu)
+		// 추천메뉴 설정하기
 		sGroup.PATCH("/suggestion", p.seller.SuggestMenu)
 	}
 	
 	bGroup := r.Group("/buyer")
 	{
-		bGroup.GET("/getlist/:category", p.buyer.GetMenuList)
-		bGroup.GET("/getreview/:menuid", p.buyer.GetReview)
-		bGroup.GET("/ordered/:orderid", p.buyer.GetOrderStatus)
-		bGroup.POST("/addreview/:foodid", p.buyer.AddReview)
+		// 전체 메뉴 가져오기 -> 해야함
+		bGroup.GET("/menu", p.buyer.GetAll)
+		// 카테고리별 메뉴 정렬하여 가져오기(추천, 평점, 구매횟수)
+		bGroup.GET("/menu/:category", p.buyer.GetMenuList)
+		// 메뉴별 리뷰 가져오기
+		bGroup.GET("/review/:menuid", p.buyer.GetReview)
+		// 주문한 음식에 대한 리뷰 작성
+		bGroup.POST("/review/:menuid", p.buyer.AddReview)
+		// 주문 상태 가져오기
+		bGroup.GET("/order/:orderid", p.buyer.GetOrderStatus)
+		// 주문하기
 		bGroup.POST("/order", p.buyer.Order)
-		bGroup.PUT("/addorder", p.buyer.AddOrder)
-		bGroup.PUT("/changeorder", p.buyer.ChangeOrder)
-
+		// 주문에 메뉴 추가하기
+		bGroup.PATCH("/order/add", p.buyer.AddOrder)
+		// 주문에서 메뉴 바꾸기
+		bGroup.PATCH("/order/change", p.buyer.ChangeOrder)
 	}
 
 	return r

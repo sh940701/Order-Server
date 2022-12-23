@@ -5,7 +5,6 @@ import (
 	"github.com/codestates/WBABEProject-08/commits/main/util"
 	"github.com/codestates/WBABEProject-08/commits/main/model"
 	"github.com/gin-gonic/gin"
-	"fmt"
 )
 
 const daycountId = "63a488f6165051c3589bcbe4"
@@ -25,7 +24,10 @@ func GetBuyerController(Om *model.OrderedListModel, Mm *model.MenuModel) *BuyerC
 // 메뉴 리스트를 조회하는 함수
 func (bc *BuyerController) GetMenuList(c *gin.Context) {
 	category := c.Param("category")
-	fmt.Println("category: ", category)
+	if (category != "avg") && (category != "suggestion") && (category != "orderedcount") {
+		c.JSON(404, gin.H{"error" : "해당 카테고리가 존재하지 않습니다."})
+		return
+	}
 	result := bc.MenuModel.GetList(category)
 
 	c.JSON(200, gin.H{"result" : result})
@@ -78,7 +80,7 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 	}
 
 	// 음식에 리뷰를 추가한다.
-	foodId := c.Param("foodid")
+	foodId := c.Param("menuid")
 	bc.MenuModel.AddReview(foodId, review)
 
 	// 주문의 리뷰 작성 여부를 업데이트한다.
@@ -159,4 +161,12 @@ func (bc *BuyerController) AddOrder(c *gin.Context) {
 		msg = "주문 추가가 정상적으로 완료되었습니다."
 	}
 	c.JSON(200, gin.H{"msg" : msg, "id" : id})
+}
+
+
+// 메뉴목록 전체를 가져오는 함수
+func (bc *BuyerController) GetAll(c *gin.Context) {
+	list := bc.MenuModel.GetAllMenu()
+
+	c.JSON(200, gin.H{"menus" : list})
 }

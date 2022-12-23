@@ -104,11 +104,19 @@ func (m *MenuModel) GetList(category string) []Menu {
 	menus := []Menu{}
 	filter := bson.D{}
 
-	opt := options.Find().SetSort(bson.D{{Key: category, Value: -1}})
-	cursor, err := m.Menucollection.Find(context.TODO(), filter, opt)
-	util.PanicHandler(err)
-	err = cursor.All(context.TODO(), &menus)
-	util.PanicHandler(err)
+	if category == "suggestion" {
+		filter = bson.D{{Key: "suggestion", Value: true}}
+		cursor, err := m.Menucollection.Find(context.TODO(), filter)
+		util.PanicHandler(err)
+		cursor.All(context.TODO(), &menus)
+		util.PanicHandler(err)
+	} else {
+		opt := options.Find().SetSort(bson.D{{Key: category, Value: -1}})
+		cursor, err := m.Menucollection.Find(context.TODO(), filter, opt)
+		util.PanicHandler(err)
+		err = cursor.All(context.TODO(), &menus)
+		util.PanicHandler(err)
+	}
 
 	return menus
 }
@@ -216,4 +224,18 @@ func (m *MenuModel) SuggestionUpdate(suggestion *SuggestionType) error {
 	_, err = m.Menucollection.UpdateMany(context.TODO(), filter, update)
 
 	return err
+}
+
+
+// 모든 메뉴를 가져오는 메서드
+func (m *MenuModel) GetAllMenu() []Menu {
+	list := []Menu{}
+	filter := bson.D{}
+	cursor, err := m.Menucollection.Find(context.TODO(), filter)
+	util.PanicHandler(err)
+
+	err = cursor.All(context.TODO(), &list)
+	util.PanicHandler(err)
+	
+	return list
 }

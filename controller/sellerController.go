@@ -31,7 +31,10 @@ func (sc *SellerController) GetOrderList(c *gin.Context) {
 
 // 주문 요청에 대한 상태 업데이트 함수
 func (sc *SellerController) UpdateOrderStatus(c *gin.Context) {
-	orderId := util.ConvertStringToObjectId(c.Param("orderid"))
+	body := c.Request.Body
+	data, err := io.ReadAll(body)
+	util.PanicHandler(err)
+	orderId, _, _ := util.GetJsonIdKeyValue(data)
 	order := sc.OrderedListModel.GetOne(orderId)
 	
 	msg := sc.OrderedListModel.UpdateStatus(order)
