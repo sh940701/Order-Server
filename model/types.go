@@ -22,3 +22,37 @@ type ChangeMenuType struct {
 type SuggestionType struct {
 	Ids []primitive.ObjectID `json:"ids"`
 }
+
+type IdType struct {
+	Id primitive.ObjectID `json:"id"`
+}
+
+type AddMenuDataType struct {
+	Name string
+	Orderable bool
+	Limit int
+	Price int
+	From string
+	Orderedcount int
+	Avg int
+	Suggestion bool
+}
+
+type UpdateMenuDataType struct {
+	Id primitive.ObjectID
+	Key string
+	Value string
+}
+
+type AddOrderType struct {
+	IsReviewed bool
+	Status string
+	Buyerinfo BuyerInfo
+	Orderedmenus []primitive.ObjectID
+}
+
+type AddMenusType struct {
+	NewItem primitive.ObjectID
+	OrderId primitive.ObjectID
+	Neworder AddOrderType
+}

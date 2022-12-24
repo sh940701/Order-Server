@@ -22,7 +22,17 @@ func GetBuyerController(Om *model.OrderedListModel, Mm *model.MenuModel) *BuyerC
 }
 
 
-// 메뉴 리스트를 조회하는 함수
+// 조건에 맞춰 메뉴 리스트를 조회하는 함수
+// GetMenuList godoc
+// @Summary 조건에 맞는 메뉴들을 정렬하여 가져옵니다. 각 카테고리는 추천(suggestion), 평점(avg), 주문 수(orderedcount)로 이루어져 있으며, 페이지별 5개의 data를 반환합니다.
+// @Description 카테고리별 메뉴 리스트를 정렬하여 가져오기 위한 함수
+// @name GetMenuList
+// @Accept  json
+// @Produce  json
+// @Param category path string true "category"
+// @Param page query string true "page"
+// @Router /buyer/menu/{category} [get]
+// @Success 200 {object} string
 func (bc *BuyerController) GetMenuList(c *gin.Context) {
 	category := c.Param("category")
 	sPage := c.Query("page")
@@ -38,11 +48,22 @@ func (bc *BuyerController) GetMenuList(c *gin.Context) {
 
 
 // 메뉴별 평점/리뷰 데이터 조회하는 함수
+// GetReview godoc
+// @Summary 메뉴별 리뷰와 평점을 가져옵니다.
+// @Description 메뉴별로 리뷰와 평점을 가져오기 위한 함수
+// @name GetReview
+// @Accept  json
+// @Produce  json
+// @Param menu_id path string true "menuid"
+// @Router /buyer/review/{menu_id} [get]
+// @Success 200 {object} string
+// @failure 400 {object} string
+// @failure 404 {object} string
 func (bc *BuyerController) GetReview(c *gin.Context) {
 	id := util.ConvertStringToObjectId(c.Param("menuid"))
 	menu, err := bc.MenuModel.GetOneMenu(id)
 	if err != nil {
-		c.JSON(404, gin.H{"error" : err})
+		c.JSON(404, gin.H{"error" : err.Error()})
 		return
 	} else if len(menu.Reviews) == 0 {
 		c.JSON(400, gin.H{"msg" : "현재 리뷰가 없습니다."})
@@ -53,6 +74,16 @@ func (bc *BuyerController) GetReview(c *gin.Context) {
 
 
 // 현재 주문의 상태를 조회하는 함수
+// GetOrderStatus godoc
+// @Summary 현재 주문의 진행상황을 확인합니다.
+// @Description 현재 주문의 진행상황을 확인하기 위한 함수
+// @name GetOrderStatus
+// @Accept  json
+// @Produce  json
+// @Param order_id path string true "orderId"
+// @Router /buyer/order/{order_id} [get]
+// @Success 200 {object} string
+// @failure 400 {object} string
 func (bc *BuyerController) GetOrderStatus(c *gin.Context) {
 	orderId := util.ConvertStringToObjectId(c.Param("orderid"))
 	order := bc.OrderedListModel.GetOne(orderId)
@@ -67,6 +98,17 @@ func (bc *BuyerController) GetOrderStatus(c *gin.Context) {
 
 
 // 메뉴에 대한 평점 및 리뷰를 작성하는 함수
+// AddReview godoc
+// @Summary 메뉴별 리뷰와 평점을 작성합니다.
+// @Description 메뉴별로 리뷰와 평점 작성하기 위한 함수
+// @name AddReview
+// @Accept  json
+// @Produce  json
+// @Param menu_id path string true "menuid"
+// @Param review body model.Review true "review"
+// @Router /buyer/review/{menu_id} [post]
+// @Success 200 {object} string
+// @failure 400 {object} string
 func (bc *BuyerController) AddReview(c *gin.Context) {
 	review := &model.Review{}
 	err := c.ShouldBindJSON(review)
@@ -97,6 +139,17 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 
 
 // 메뉴 선택 및 주문하는 함수
+// Order godoc
+// @Summary 주문을 진행합니다.
+// @Description 주문을 하는 함수
+// @name Order
+// @Accept  json
+// @Produce  json
+// @Param orderData body model.AddOrderType true "orderData"
+// @Router /buyer/order [post]
+// @Success 200 {object} string
+// @failure 400 {object} string
+// @failure 404 {object} string
 func (bc *BuyerController) Order(c *gin.Context) {
 	list := &model.OrderedList{}
 	err := c.ShouldBindJSON(list)
@@ -126,6 +179,16 @@ func (bc *BuyerController) Order(c *gin.Context) {
 
 
 // 메뉴 변경하는 함수
+// AddOrder godoc
+// @Summary 주문에서 메뉴를 변경합니다.
+// @Description 주문서 메뉴를 변경하는 함수 -> "배달중", "배달완료" 상태일 시에는 에러 반환
+// @name ChangeOrder
+// @Accept  json
+// @Produce  json
+// @Param changeData body model.ChangeMenuType true "changeData"
+// @Router /buyer/order/change [patch]
+// @Success 200 {object} string
+// @failure 400 {object} string
 func (bc *BuyerController) ChangeOrder(c *gin.Context) {
 	changeMenuStruct := &model.ChangeMenuType{}
 	err := c.ShouldBindJSON(changeMenuStruct)
@@ -146,6 +209,15 @@ func (bc *BuyerController) ChangeOrder(c *gin.Context) {
 
 
 // 메뉴 추가하는 함수
+// AddOrder godoc
+// @Summary 주문에 메뉴를 추가합니다.
+// @Description 주문에 메뉴를 추가하는 함수 -> "배달중", "배달완료" 상태일 시에는 에러 반환
+// @name AddOrder
+// @Accept  json
+// @Produce  json
+// @Param addData body model.AddMenusType true "addData"
+// @Router /buyer/order/add [patch]
+// @Success 200 {object} string
 func (bc *BuyerController) AddOrder(c *gin.Context) {
 	var msg string
 	var id primitive.ObjectID
@@ -168,6 +240,15 @@ func (bc *BuyerController) AddOrder(c *gin.Context) {
 
 
 // 메뉴목록 전체를 가져오는 함수
+// GetAll godoc
+// @Summary 모든 메뉴를 가져옵니다. 페이지당 5개의 데이터를 가지고 있습니다.
+// @Description 모든 메뉴 리스트를 가져오기 위한 함수
+// @name GetAll
+// @Accept  json
+// @Produce  json
+// @Param page query string true "page"
+// @Router /buyer/menu [get]
+// @Success 200 {object} string
 func (bc *BuyerController) GetAll(c *gin.Context) {
 	sPage := c.Query("page")
 	iPage, _ := strconv.Atoi(sPage)
