@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"time"
 	"net/http"
 	ctl "github.com/codestates/WBABEProject-08/commits/main/controller"
+	logger "github.com/codestates/WBABEProject-08/commits/main/log"
 	model "github.com/codestates/WBABEProject-08/commits/main/model"
 	route "github.com/codestates/WBABEProject-08/commits/main/route"
 	conf "github.com/codestates/WBABEProject-08/commits/main/config"
@@ -17,8 +19,15 @@ func errPanic(err error) {
 
 func main() {
 	var err error
-
+	
 	config := conf.GetConfig("/Users/sunghyun/Desktop/projects/wemade_project/config/config.toml")
+	
+		if err := logger.InitLogger(config); err != nil {
+			fmt.Printf("init logger failed, err:%v\n", err)
+			return
+		}
+	
+		logger.Debug("ready server....")
 
 	port := config.Server.Port
 	host := config.Server.Host

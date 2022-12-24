@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/codestates/WBABEProject-08/commits/main/controller"
+	logger "github.com/codestates/WBABEProject-08/commits/main/log"
 )
 
 type Router struct {
@@ -38,8 +39,8 @@ func CORS() gin.HandlerFunc {
 func (p *Router) Idx() *gin.Engine {
 	r := gin.New()
 
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	r.Use(logger.GinLogger())
+	r.Use(logger.GinRecovery(true))
 	r.Use(CORS())
 
 	sGroup := r.Group("/seller")
