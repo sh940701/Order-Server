@@ -44,7 +44,7 @@ func (p *Router) Idx() *gin.Engine {
 
 	sGroup := r.Group("/seller")
 	{
-		// 전체 주문 목록 가져오기
+		// 전체 주문 목록 가져오기 + 페이지네이션
 		sGroup.GET("/order", p.seller.GetOrderList)
 		// 주문 상태 변경
 		sGroup.PATCH("/order", p.seller.UpdateOrderStatus)
@@ -60,9 +60,9 @@ func (p *Router) Idx() *gin.Engine {
 	
 	bGroup := r.Group("/buyer")
 	{
-		// 전체 메뉴 가져오기 -> 해야함
+		// 전체 메뉴 가져오기 + 페이지네이션
 		bGroup.GET("/menu", p.buyer.GetAll)
-		// 카테고리별 메뉴 정렬하여 가져오기(추천, 평점, 구매횟수)
+		// 카테고리별 메뉴 정렬하여 가져오기(추천, 평점, 구매횟수) + 페이지네이션
 		bGroup.GET("/menu/:category", p.buyer.GetMenuList)
 		// 메뉴별 리뷰 가져오기
 		bGroup.GET("/review/:menuid", p.buyer.GetReview)

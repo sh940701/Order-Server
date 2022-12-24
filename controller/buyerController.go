@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"strconv"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"github.com/codestates/WBABEProject-08/commits/main/util"
 	"github.com/codestates/WBABEProject-08/commits/main/model"
@@ -24,11 +25,13 @@ func GetBuyerController(Om *model.OrderedListModel, Mm *model.MenuModel) *BuyerC
 // 메뉴 리스트를 조회하는 함수
 func (bc *BuyerController) GetMenuList(c *gin.Context) {
 	category := c.Param("category")
+	sPage := c.Query("page")
+	iPage, _ := strconv.Atoi(sPage)
 	if (category != "avg") && (category != "suggestion") && (category != "orderedcount") {
 		c.JSON(404, gin.H{"error" : "해당 카테고리가 존재하지 않습니다."})
 		return
 	}
-	result := bc.MenuModel.GetList(category)
+	result := bc.MenuModel.GetList(category, int64(iPage))
 
 	c.JSON(200, gin.H{"result" : result})
 }
@@ -166,7 +169,9 @@ func (bc *BuyerController) AddOrder(c *gin.Context) {
 
 // 메뉴목록 전체를 가져오는 함수
 func (bc *BuyerController) GetAll(c *gin.Context) {
-	list := bc.MenuModel.GetAllMenu()
+	sPage := c.Query("page")
+	iPage, _ := strconv.Atoi(sPage)
+	list := bc.MenuModel.GetAllMenu(int64(iPage))
 
 	c.JSON(200, gin.H{"menus" : list})
 }

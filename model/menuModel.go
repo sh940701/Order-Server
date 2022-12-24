@@ -100,7 +100,7 @@ func (m *MenuModel) Delete(data []byte) (interface{}, error) {
 
 
 // 메뉴 리스트를 조회하는 메서드
-func (m *MenuModel) GetList(category string) []Menu {
+func (m *MenuModel) GetList(category string, page int64) []Menu {
 	menus := []Menu{}
 	filter := bson.D{}
 
@@ -111,7 +111,7 @@ func (m *MenuModel) GetList(category string) []Menu {
 		cursor.All(context.TODO(), &menus)
 		util.PanicHandler(err)
 	} else {
-		opt := options.Find().SetSort(bson.D{{Key: category, Value: -1}})
+		opt := options.Find().SetSort(bson.D{{Key: category, Value: -1}}).SetLimit(5).SetSkip((page - 1) * 5)
 		cursor, err := m.Menucollection.Find(context.TODO(), filter, opt)
 		util.PanicHandler(err)
 		err = cursor.All(context.TODO(), &menus)
@@ -228,14 +228,15 @@ func (m *MenuModel) SuggestionUpdate(suggestion *SuggestionType) error {
 
 
 // 모든 메뉴를 가져오는 메서드
-func (m *MenuModel) GetAllMenu() []Menu {
+func (m *MenuModel) GetAllMenu(page int64) []Menu {
 	list := []Menu{}
 	filter := bson.D{}
-	cursor, err := m.Menucollection.Find(context.TODO(), filter)
+	option := options.Find().SetLimit(5).SetSkip((page - 1) * 5)
+	cursor, err := m.Menucollection.Find(context.TODO(), filter, option)
 	util.PanicHandler(err)
 
 	err = cursor.All(context.TODO(), &list)
 	util.PanicHandler(err)
-	
+
 	return list
 }

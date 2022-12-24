@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/codestates/WBABEProject-08/commits/main/model"
 	"io"
+	"strconv"
 )
 
 type SellerController struct {
@@ -22,8 +23,10 @@ func GetSellerController(Om *model.OrderedListModel, Mm *model.MenuModel) *Selle
 
 // 주문내역 리스트 조회하는 함수
 func (sc *SellerController) GetOrderList(c *gin.Context) {
+	sPage := c.Query("page")
+	iPage, _ := strconv.Atoi(sPage)
 	// 전체 주문내역 리스트를 가져온다.
-	result := sc.OrderedListModel.GetAll(daycountId)
+	result := sc.OrderedListModel.GetAll(daycountId, int64(iPage))
 
 	c.JSON(200, gin.H{"주문 목록" : result})
 }
