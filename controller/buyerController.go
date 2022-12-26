@@ -25,6 +25,7 @@ func GetBuyerController(Om *model.OrderedListModel, Mm *model.MenuModel) *BuyerC
 // 조건에 맞춰 메뉴 리스트를 조회하는 함수
 // GetMenuList godoc
 // @Summary 조건에 맞는 메뉴들을 정렬하여 가져옵니다. 각 카테고리는 추천(suggestion), 평점(avg), 주문 수(orderedcount)로 이루어져 있으며, 페이지별 5개의 data를 반환합니다.
+// @Tags Buyer
 // @Description 카테고리별 메뉴 리스트를 정렬하여 가져오기 위한 함수
 // @name GetMenuList
 // @Accept  json
@@ -50,6 +51,7 @@ func (bc *BuyerController) GetMenuList(c *gin.Context) {
 // 메뉴별 평점/리뷰 데이터 조회하는 함수
 // GetReview godoc
 // @Summary 메뉴별 리뷰와 평점을 가져옵니다.
+// @Tags Buyer
 // @Description 메뉴별로 리뷰와 평점을 가져오기 위한 함수
 // @name GetReview
 // @Accept  json
@@ -76,6 +78,7 @@ func (bc *BuyerController) GetReview(c *gin.Context) {
 // 현재 주문의 상태를 조회하는 함수
 // GetOrderStatus godoc
 // @Summary 현재 주문의 진행상황을 확인합니다.
+// @Tags Buyer
 // @Description 현재 주문의 진행상황을 확인하기 위한 함수
 // @name GetOrderStatus
 // @Accept  json
@@ -100,6 +103,7 @@ func (bc *BuyerController) GetOrderStatus(c *gin.Context) {
 // 메뉴에 대한 평점 및 리뷰를 작성하는 함수
 // AddReview godoc
 // @Summary 메뉴별 리뷰와 평점을 작성합니다.
+// @Tags Buyer
 // @Description 메뉴별로 리뷰와 평점 작성하기 위한 함수
 // @name AddReview
 // @Accept  json
@@ -141,6 +145,7 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 // 메뉴 선택 및 주문하는 함수
 // Order godoc
 // @Summary 주문을 진행합니다.
+// @Tags Buyer
 // @Description 주문을 하는 함수
 // @name Order
 // @Accept  json
@@ -181,6 +186,7 @@ func (bc *BuyerController) Order(c *gin.Context) {
 // 메뉴 변경하는 함수
 // AddOrder godoc
 // @Summary 주문에서 메뉴를 변경합니다.
+// @Tags Buyer
 // @Description 주문서 메뉴를 변경하는 함수 -> "배달중", "배달완료" 상태일 시에는 에러 반환
 // @name ChangeOrder
 // @Accept  json
@@ -211,6 +217,7 @@ func (bc *BuyerController) ChangeOrder(c *gin.Context) {
 // 메뉴 추가하는 함수
 // AddOrder godoc
 // @Summary 주문에 메뉴를 추가합니다.
+// @Tags Buyer
 // @Description 주문에 메뉴를 추가하는 함수 -> "배달중", "배달완료" 상태일 시에는 에러 반환
 // @name AddOrder
 // @Accept  json
@@ -242,6 +249,7 @@ func (bc *BuyerController) AddOrder(c *gin.Context) {
 // 메뉴목록 전체를 가져오는 함수
 // GetAll godoc
 // @Summary 모든 메뉴를 가져옵니다. 페이지당 5개의 데이터를 가지고 있습니다.
+// @Tags Buyer
 // @Description 모든 메뉴 리스트를 가져오기 위한 함수
 // @name GetAll
 // @Accept  json
