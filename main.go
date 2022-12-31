@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/codestates/WBABEProject-08/commits/main/util"
 	"fmt"
 	"time"
 	"net/http"
@@ -11,16 +12,10 @@ import (
 	conf "github.com/codestates/WBABEProject-08/commits/main/config"
 )
 
-func errPanic(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func main() {
 	var err error
 	
-	config := conf.GetConfig("/Users/sunghyun/Desktop/projects/wemade_project/config/config.toml")
+	config := conf.GetConfig("config/config.toml")
 	
 		if err := logger.InitLogger(config); err != nil {
 			fmt.Printf("init logger failed, err:%v\n", err)
@@ -32,14 +27,14 @@ func main() {
 	port := config.Server.Port
 	host := config.Server.Host
 	dbName := config.Server.DBname
-	Model0 := config.DB["menu"]["model"]
-	Model1 := config.DB["orderedlist"]["model"]
+	menuModel := config.DB["menu"]["model"]
+	orderedListModel := config.DB["orderedlist"]["model"]
 
 	// model 객체 초기화
-	mModel, err := model.GetMenuModel(dbName, host, Model0)
-	errPanic(err)
-	oModel, err := model.GetOrderedListModel(dbName, host, Model1)
-	errPanic(err)
+	mModel, err := model.GetMenuModel(dbName, host, menuModel)
+	util.ErrorHandler(err)
+	oModel, err := model.GetOrderedListModel(dbName, host, orderedListModel)
+	util.ErrorHandler(err)
 
 	// model 객체를 넣어 controller를 만들어줌
 	controller := ctl.GetController(oModel, mModel)

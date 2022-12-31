@@ -36,7 +36,7 @@ func (sc *SellerController) GetOrderList(c *gin.Context) {
 	sPage := c.Query("page")
 	iPage, _ := strconv.Atoi(sPage)
 	// 전체 주문내역 리스트를 가져온다.
-	result := sc.OrderedListModel.GetAll(daycountId, int64(iPage))
+	result := sc.OrderedListModel.GetAll(daycountID, int64(iPage))
 
 	c.JSON(200, gin.H{"주문 목록" : result})
 }
@@ -56,7 +56,7 @@ func (sc *SellerController) GetOrderList(c *gin.Context) {
 func (sc *SellerController) UpdateOrderStatus(c *gin.Context) {
 	body := c.Request.Body
 	data, err := io.ReadAll(body)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 	orderId, _, _ := util.GetJsonIdKeyValue(data)
 	order := sc.OrderedListModel.GetOne(orderId)
 	
@@ -80,9 +80,9 @@ func (sc *SellerController) UpdateOrderStatus(c *gin.Context) {
 func (sc *SellerController) AddMenu(c *gin.Context) {
 	body := c.Request.Body
 	byteData, err := io.ReadAll(body)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 
-	result, err := sc.MenuModel.Add(byteData)
+	result, err := sc.MenuModel.AddMenu(byteData)
 	if err != nil {
 		c.JSON(404, gin.H{"msg" : "실패하였습니다.", "err" : err})
 	} else {
@@ -100,15 +100,14 @@ func (sc *SellerController) AddMenu(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param menuId body model.IdType true "menuId"
-// @Router /seller/delete [post]
+// @Router /seller/menu/{menuid} [delete]
 // @Success 200 {object} string
 // @failure 404 {object} string
 func (sc *SellerController) DeleteMenu(c *gin.Context) {
-	body := c.Request.Body
-	byteDate, err := io.ReadAll(body)
-	util.PanicHandler(err)
+	id := c.Query("menuid")
+	menuId := util.ConvertStringToObjectId(id)
 
-	result, err := sc.MenuModel.Delete(byteDate)
+	result, err := sc.MenuModel.DeleteMenu(menuId)
 	if err != nil {
 		c.JSON(404, gin.H{"msg" : "실패하였습니다.", "err" : err})
 	} else if result == nil {
@@ -128,15 +127,15 @@ func (sc *SellerController) DeleteMenu(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param updateData body model.UpdateMenuDataType true "update data"
-// @Router /seller/patch [post]
+// @Router /seller/menu [patch]
 // @Success 200 {object} string
 // @failure 404 {object} string
 func (sc *SellerController) UpdateMenu(c *gin.Context) {
 	body := c.Request.Body
 	data, err := io.ReadAll(body)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 
-	result, err := sc.MenuModel.Update(data)
+	result, err := sc.MenuModel.UpdateMenu(data)
 
 	if err != nil {
 		c.JSON(404, gin.H{"msg" : "실패하였습니다.", "err" : err})
@@ -157,14 +156,15 @@ func (sc *SellerController) UpdateMenu(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param suggestionIds body model.SuggestionType true "suggest data"
-// @Router /seller/suggestion [post]
+// @Router /seller/suggestion [patch]
 // @Success 200 {object} string
 // @failure 404 {object} string
 func (sc *SellerController) SuggestMenu(c *gin.Context) {
 	var suggestion model.SuggestionType
-	c.ShouldBindJSON(&suggestion)
+	err := c.ShouldBindJSON(&suggestion)
+	util.ErrorHandler(err)
 
-	err := sc.MenuModel.SuggestionUpdate(&suggestion)
+	err = sc.MenuModel.SuggestionUpdate(&suggestion)
 	if err != nil {
 		c.JSON(400, gin.H{"error" : err.Error()})
 		return

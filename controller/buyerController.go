@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const daycountId = "63a488f6165051c3589bcbe4"
+const daycountID = "63a488f6165051c3589bcbe4"
 
 type BuyerController struct {
 	OrderedListModel *model.OrderedListModel
@@ -42,7 +42,7 @@ func (bc *BuyerController) GetMenuList(c *gin.Context) {
 		c.JSON(404, gin.H{"error" : "해당 카테고리가 존재하지 않습니다."})
 		return
 	}
-	result := bc.MenuModel.GetList(category, int64(iPage))
+	result := bc.MenuModel.GetMenuList(category, int64(iPage))
 
 	c.JSON(200, gin.H{"result" : result})
 }
@@ -91,7 +91,7 @@ func (bc *BuyerController) GetOrderStatus(c *gin.Context) {
 	orderId := util.ConvertStringToObjectId(c.Param("orderid"))
 	order := bc.OrderedListModel.GetOne(orderId)
 	// 존재하지 않는 id를 입력했을때의 처리
-	if len(order.Orderedmenus) == 0 {
+	if len(order.OrderedMenus) == 0 {
 		c.JSON(400, gin.H{"msg" : "존재하지 않는 주문입니다."})
 		return
 	} else {
@@ -117,9 +117,11 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 	review := &model.Review{}
 	err := c.ShouldBindJSON(review)
 	if err != nil {
-		util.PanicHandler(err)
+		util.ErrorHandler(err)
 	}
-	// fmt.Println(review)
+	if review.Score > 5 {
+		c.JSON(400, gin.H{"msg" : "평점은 5점을 넘을 수 없습니다."})
+	}
 	// 먼저 해당 주문에 대한 리뷰가 있는지 확인하고 있다면 멈춘다.
 	orderId := review.OrderId
 	order := bc.OrderedListModel.GetOne(orderId)
@@ -156,30 +158,31 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 // @failure 400 {object} string
 // @failure 404 {object} string
 func (bc *BuyerController) Order(c *gin.Context) {
-	list := &model.OrderedList{}
+	list := &model.OrderedList{
+		IsReviewed : false,
+		Status : "주문접수",
+	}
 	err := c.ShouldBindJSON(list)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 
 	// 주문하기 전에 메뉴가 주문 가능한지 확인
-	menu, err := bc.MenuModel.GetOneMenu(list.Orderedmenus[0])
+	menu, err := bc.MenuModel.GetOneMenu(list.OrderedMenus[0].MenuId)
 	if err != nil {
 		c.JSON(404, gin.H{"error" : err})
 		return
-	} else if !menu.Orderable {
+	} else if !menu.IsOrderable {
 		c.JSON(400, gin.H{"msg" : "현재 주문이 불가능합니다."})
 		return
 	} else {
 		// 있다면 limit -1, count +1
 		bc.MenuModel.LimitAndCountUpdate(menu.ID, menu.Limit, menu.Orderedcount)
 		// 그리고 DayOrderCount 1 추가
-		dayCount := bc.OrderedListModel.DayOrderCount(daycountId)
+		dayCount := bc.OrderedListModel.DayOrderCount(daycountID)
 		// 주문 추가
 		orderNum := bc.OrderedListModel.Add(list)
 
 		c.JSON(200, gin.H{"주문아이디" : orderNum, "오늘 주문번호" : dayCount})
 	}
-	
-
 }
 
 
@@ -198,7 +201,7 @@ func (bc *BuyerController) Order(c *gin.Context) {
 func (bc *BuyerController) ChangeOrder(c *gin.Context) {
 	changeMenuStruct := &model.ChangeMenuType{}
 	err := c.ShouldBindJSON(changeMenuStruct)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 
 	order := bc.OrderedListModel.GetOne(changeMenuStruct.OrderId)
 	if (order.Status == "배달중") || (order.Status == "배달완료") {
@@ -231,10 +234,17 @@ func (bc *BuyerController) AddOrder(c *gin.Context) {
 
 	addStruct := model.AddMenuType{}
 	err := c.ShouldBindJSON(&addStruct)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 
 	// 해당 주문의 현재 상태를 검사한다.
 	order := bc.OrderedListModel.GetOne(addStruct.OrderId)
+	// 이전 주문 메뉴에 현재 추가하려는 메뉴가 있는지 검사
+	for _, value := range order.OrderedMenus {
+		if value.MenuId == addStruct.NewItem {
+			c.JSON(400, gin.H{"msg" : "이미 해당 메뉴가 포함되어 있습니다."})
+			return
+		}
+	}
 	if (order.Status == "배달중") || (order.Status == "배달완료") {
 		id = bc.OrderedListModel.Add(&addStruct.NewOrder)
 		msg = "주문 추가가 불가능하여 새 주문으로 접수되었습니다."

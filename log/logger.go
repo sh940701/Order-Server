@@ -43,8 +43,8 @@ func InitLogger(cfg *conf.Config) (err error) {
 func Debug(ctx ...interface{}) {
 	var b bytes.Buffer
 	for _, str := range ctx {
-		b.WriteString(str.(string))
-		b.WriteString(" ")
+		b.WriteString(str.(string) + " ")
+		// b.WriteString(" ")
 	}
 
 	lg.Debug("debug", zap.String("-", b.String()))
@@ -53,18 +53,30 @@ func Debug(ctx ...interface{}) {
 // Info is a convenient alias for Root().Info
 func Info(ctx ...interface{}) {
 	var b bytes.Buffer
+	for _, str := range ctx {
+		b.WriteString(str.(string) + " ")
+	}
+
 	lg.Info("info", zap.String("-", b.String()))
 }
 
 // Warn is a convenient alias for Root().Warn
 func Warn(ctx ...interface{}) {
 	var b bytes.Buffer
+	for _, str := range ctx {
+		b.WriteString(str.(string) + " ")
+	}
+
 	lg.Warn("warn", zap.String("-", b.String()))
 }
 
 // Error is a convenient alias for Root().Error
 func Error(ctx ...interface{}) {
 	var b bytes.Buffer
+	for _, str := range ctx {
+		b.WriteString(str.(string) + " ")
+	}
+	
 	lg.Error("error", zap.String("-", b.String()))
 }
 

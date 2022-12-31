@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/codestates/WBABEProject-08/commits/main/model"
-	// "github.com/codestates/WBABEProject-08/commits/main/util"
 )
 
 type Controller struct {

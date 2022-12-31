@@ -1,19 +1,20 @@
 package util
-
 import (
+	"github.com/codestates/WBABEProject-08/commits/main/log"
 	"encoding/json"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func PanicHandler (err error) {
+func ErrorHandler (err error) {
 	if err != nil {
-		panic(err)
+		logger.Error(err)
 	}
 }
 
 func GetJsonIdKeyValue(data []byte) (primitive.ObjectID, string, interface{}) {
 	var unMarshared map[string]interface{}
-	json.Unmarshal(data, &unMarshared)
+	err := json.Unmarshal(data, &unMarshared)
+	ErrorHandler(err)
 
 	var id primitive.ObjectID
 	var key string
@@ -35,7 +36,7 @@ func GetJsonIdKeyValue(data []byte) (primitive.ObjectID, string, interface{}) {
 
 func ConvertStringToObjectId(sId string) primitive.ObjectID {
 	id, err := primitive.ObjectIDFromHex(sId)
-	PanicHandler(err)
+	ErrorHandler(err)
 
 	return id
 }

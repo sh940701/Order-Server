@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"context"
 
-
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -26,8 +25,9 @@ type Review struct {
 
 type Menu struct {
 	ID primitive.ObjectID `bson:"_id,omitempty"`
+	IsVisible bool `bson:"isvisible" json:"isvisible"`
 	Name string `bson:"name" json:"name"`
-	Orderable bool `bson:"orderable" json:"orderable"`
+	IsOrderable bool `bson:"orderable" json:"orderable"`
 	Limit int `bson:"limit" json:"limit"`
 	Price int `bson:"price" json:"price"`
 	From string `bson:"from" json:"from"`
@@ -51,26 +51,27 @@ func GetMenuModel(db, host, model string) (*MenuModel, error) {
 	return m, nil
 }
 
-
 // DB에 메뉴 data를 추가하는 메서드
-func (m *MenuModel) Add(data []byte) (primitive.ObjectID, error) {
-	fmt.Println("string: ", string(data))
-	newMenu := &Menu{}
-	json.Unmarshal(data, newMenu)
-
-	fmt.Println("Unmarshar: ", newMenu)
+func (m *MenuModel) AddMenu(data []byte) (primitive.ObjectID, error) {
+	// 새 메뉴를 추가할 때의 default값 생성
+	newMenu := &Menu{
+		IsVisible : true,
+		Orderedcount : 0,
+		Avg : 0,
+		Suggestion : false,
+	}
+	err := json.Unmarshal(data, newMenu)
+	
+	util.ErrorHandler(err)
 
 	result, err := m.Menucollection.InsertOne(context.TODO(), newMenu)
-	if err != nil {
-		return result.InsertedID.(primitive.ObjectID), err
-	} else {
-		return result.InsertedID.(primitive.ObjectID), nil
-	}
+	
+	return result.InsertedID.(primitive.ObjectID), err
 }
 
 
 // DB 메뉴 data를 업데이트하는 메서드
-func (m *MenuModel) Update(data []byte) (interface{}, error) {
+func (m *MenuModel) UpdateMenu(data []byte) (interface{}, error) {
 	id, key, value := util.GetJsonIdKeyValue(data)
 	
 	filter := bson.D{{Key: "_id", Value: id}}
@@ -86,37 +87,33 @@ func (m *MenuModel) Update(data []byte) (interface{}, error) {
 
 
 // DB 메뉴 data를 삭제하는 메서드
-func (m *MenuModel) Delete(data []byte) (interface{}, error) {
-	id, _, _ := util.GetJsonIdKeyValue(data)
-	filter := bson.D{{Key: "_id", Value: id}}
-	result, err := m.Menucollection.DeleteOne(context.TODO(), filter)
+func (m *MenuModel) DeleteMenu(menuId primitive.ObjectID) (interface{}, error) {
+	filter := bson.D{{Key: "_id", Value: menuId}}
+	option := bson.D{{Key: "$set", Value: bson.D{{Key: "isvisible", Value: false}}}}
+	result, err := m.Menucollection.UpdateOne(context.TODO(), filter, option)
 
 	if err != nil {
 		return nil, err
 	} else {
-		return result.DeletedCount, nil
+		return result.MatchedCount, nil
 	}
 }
 
 
 // 메뉴 리스트를 조회하는 메서드
-func (m *MenuModel) GetList(category string, page int64) []Menu {
+func (m *MenuModel) GetMenuList(category string, page int64) []Menu {
 	menus := []Menu{}
-	filter := bson.D{}
+	filter := bson.D{{Key: "isvisible", Value: true}}
 
 	if category == "suggestion" {
-		filter = bson.D{{Key: "suggestion", Value: true}}
-		cursor, err := m.Menucollection.Find(context.TODO(), filter)
-		util.PanicHandler(err)
-		cursor.All(context.TODO(), &menus)
-		util.PanicHandler(err)
-	} else {
-		opt := options.Find().SetSort(bson.D{{Key: category, Value: -1}}).SetLimit(5).SetSkip((page - 1) * 5)
-		cursor, err := m.Menucollection.Find(context.TODO(), filter, opt)
-		util.PanicHandler(err)
-		err = cursor.All(context.TODO(), &menus)
-		util.PanicHandler(err)
+		filter = bson.D{{Key: "suggestion", Value: true}, {Key: "isvisible", Value: true}}
 	}
+	opt := options.Find().SetSort(bson.D{{Key: category, Value: -1}}).SetLimit(5).SetSkip((page - 1) * 5)
+	cursor, err := m.Menucollection.Find(context.TODO(), filter, opt)
+	util.ErrorHandler(err)
+
+	err = cursor.All(context.TODO(), &menus)
+	util.ErrorHandler(err)
 
 	return menus
 }
@@ -133,7 +130,7 @@ func (m *MenuModel) AddReview(sfoodId string, review *Review) {
 	filter := bson.D{{Key: "_id", Value: foodId}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "reviews", Value: food.Reviews}}}}
 	_, err := m.Menucollection.UpdateOne(context.TODO(), filter, update)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 }
 
 
@@ -141,7 +138,7 @@ func (m *MenuModel) AddReview(sfoodId string, review *Review) {
 func (m *MenuModel) LimitAndCountUpdate(id primitive.ObjectID, limit, count int) {
 	var update bson.D
 	filter := bson.D{{Key: "_id", Value: id}}
-	if limit != 1 {
+	if limit > 1 {
 		update = bson.D{
 			{Key: "$set", Value: bson.D{
 				{Key: "limit", Value : limit - 1}, 
@@ -155,7 +152,7 @@ func (m *MenuModel) LimitAndCountUpdate(id primitive.ObjectID, limit, count int)
 	}
 	_, err := m.Menucollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		util.PanicHandler(err)
+		util.ErrorHandler(err)
 	}
 }
 
@@ -194,7 +191,7 @@ func (m *MenuModel) CalcAvg(sid string) {
 	}}
 	_, err := m.Menucollection.UpdateOne(context.TODO(), filter, update)
 
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 }
 
 
@@ -210,7 +207,7 @@ func (m *MenuModel) SuggestionUpdate(suggestion *SuggestionType) error {
 		},
 	}}
 	_, err := m.Menucollection.UpdateMany(context.TODO(), filter, update)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 
 	// 이후 새로운 아이디의 음식들을 업데이트해준다.
 	// 배열 핸들링
@@ -233,10 +230,10 @@ func (m *MenuModel) GetAllMenu(page int64) []Menu {
 	filter := bson.D{}
 	option := options.Find().SetLimit(5).SetSkip((page - 1) * 5)
 	cursor, err := m.Menucollection.Find(context.TODO(), filter, option)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 
 	err = cursor.All(context.TODO(), &list)
-	util.PanicHandler(err)
+	util.ErrorHandler(err)
 
 	return list
 }
