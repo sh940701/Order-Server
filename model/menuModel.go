@@ -134,20 +134,20 @@ func (m *MenuModel) AddReview(sfoodId string, review *Review) {
 }
 
 
-// 메뉴의 limit을 1 줄여주고 count를 1 올려주는 함수
-func (m *MenuModel) LimitAndCountUpdate(id primitive.ObjectID, limit, count int) {
+// 메뉴의 limit을 amount만큼 줄여주고 count를 amount만큼 올려주는 함수
+func (m *MenuModel) LimitAndCountUpdate(id primitive.ObjectID, limit, count, amount int) {
 	var update bson.D
 	filter := bson.D{{Key: "_id", Value: id}}
-	if limit > 1 {
+	if limit - amount > 0 {
 		update = bson.D{
 			{Key: "$set", Value: bson.D{
-				{Key: "limit", Value : limit - 1}, 
-				{Key: "orderedcount", Value: count + 1}}}}
+				{Key: "limit", Value : limit - amount}, 
+				{Key: "orderedcount", Value: count + amount}}}}
 	} else {
 		update = bson.D{
 			{Key: "$set", Value: bson.D{
-				{Key: "limit", Value : limit - 1}, 
-				{Key: "orderedcount", Value: count + 1}, 
+				{Key: "limit", Value : limit - amount}, 
+				{Key: "orderedcount", Value: count + amount}, 
 				{Key: "orderable", Value: false}}}}
 	}
 	_, err := m.Menucollection.UpdateOne(context.TODO(), filter, update)
