@@ -119,28 +119,42 @@ func (bc *BuyerController) AddReview(c *gin.Context) {
 	if err != nil {
 		util.ErrorHandler(err)
 	}
+	// 평점이 5점 이상이라면 abort한다.
 	if review.Score > 5 {
 		c.JSON(400, gin.H{"msg" : "평점은 5점을 넘을 수 없습니다."})
+		return
 	}
-	// 먼저 해당 주문에 대한 리뷰가 있는지 확인하고 있다면 멈춘다.
+	foodId := c.Param("menuid")
+	// 먼저 해당 주문에 대한 리뷰 완료되었는지 확인한다.
 	orderId := review.OrderId
 	order := bc.OrderedListModel.GetOne(orderId)
 	if order.IsReviewed {
-		c.JSON(400, gin.H{"msg" : "이미 후기가 작성된 주문입니다."})
+		c.JSON(400, gin.H{"msg" : "이미 후기작성이 완료된 주문입니다."})
 		return
+	}
+	// 그리고 해당 주문의 해당 메뉴에 대해서 리뷰가 작성되었는지 확인한다.
+	for _, value := range order.OrderedMenus {
+		if value.MenuId == util.ConvertStringToObjectId(foodId) && value.IsReviewed {
+			c.JSON(400, gin.H{"msg" : "이미 해당 메뉴에 대한 후기가 작성되었습니다."})
+			return
+		}
 	}
 
 	// 음식에 리뷰를 추가한다.
-	foodId := c.Param("menuid")
 	bc.MenuModel.AddReview(foodId, review)
 
-	// 주문의 리뷰 작성 여부를 업데이트한다.
-	bc.OrderedListModel.UpdateReviewable(review.OrderId)
+	// 주문내에서 해당 "메뉴의 리뷰 작성 여부"를 업데이트한다.
+	isOrderReviewed := bc.OrderedListModel.UpdateMenuReviewable(order, util.ConvertStringToObjectId(foodId))
+
+	// 만약 모든 메뉴의 IsReviewed가 true라면, "주문의 전체 리뷰 여부"도 업데이트 해준다.
+	if isOrderReviewed {
+		bc.OrderedListModel.UpdateOrderReviewable(review.OrderId)
+	}
 
 	// 음식의 평균 점수를 계산하여 넣어준다.
 	bc.MenuModel.CalcAvg(foodId)
 
-	c.JSON(200, gin.H{"msg" : "리뷰 작성이 완료되었습니다."})
+	c.JSON(200, gin.H{"msg" : "메뉴에 대한 리뷰 작성이 완료되었습니다."})
 }
 
 
@@ -165,24 +179,46 @@ func (bc *BuyerController) Order(c *gin.Context) {
 	err := c.ShouldBindJSON(list)
 	util.ErrorHandler(err)
 
-	// 주문하기 전에 메뉴가 주문 가능한지 확인
-	menu, err := bc.MenuModel.GetOneMenu(list.OrderedMenus[0].MenuId)
-	if err != nil {
-		c.JSON(404, gin.H{"error" : err})
-		return
-	} else if !menu.IsOrderable {
-		c.JSON(400, gin.H{"msg" : "현재 주문이 불가능합니다."})
-		return
-	} else {
-		// 있다면 limit -1, count +1
-		bc.MenuModel.LimitAndCountUpdate(menu.ID, menu.Limit, menu.Orderedcount)
-		// 그리고 DayOrderCount 1 추가
-		dayCount := bc.OrderedListModel.DayOrderCount(daycountID)
-		// 주문 추가
-		orderNum := bc.OrderedListModel.Add(list)
+	menus := []model.Menu{}
 
-		c.JSON(200, gin.H{"주문아이디" : orderNum, "오늘 주문번호" : dayCount})
+	// 모든 메뉴는 주문 시점에 리뷰가 작성되어있지 않기 때문에 false로 초기화해줌
+	for i := 0; i < len(list.OrderedMenus); i++ {
+		list.OrderedMenus[i].IsReviewed = false
 	}
+
+	// 주문하기 전에 메뉴가 주문 가능한지 확인
+	// 메뉴 리스트를 돌면서 모든 메뉴가 주문 가능한 상태인지 확인한다.
+	for i := 0; i < len(list.OrderedMenus); i++ {
+		menu, err := bc.MenuModel.GetOneMenu(list.OrderedMenus[i].MenuId)
+		if err != nil {
+			c.JSON(404, gin.H{"error" : err})
+			return
+		} else if !menu.IsOrderable {
+			c.JSON(400, gin.H{"해당 메뉴는 현재 주문이 불가능합니다." : menu.Name})
+			return
+		// 주문 가능한 메뉴 수량 체크 로직 추가
+		} else if menu.Limit < list.OrderedMenus[i].Amount {
+			c.JSON(400, gin.H{"msg" : "해당 메뉴의 수량이 부족합니다.", "남은 수량" : menu.Limit})
+			return
+		} else {
+			menus = append(menus, *menu)
+		}
+	}
+	var dayCount int
+	var orderNum primitive.ObjectID
+	// 메뉴별로 판매 수량 및 판매 가능 수량을 업데이트해준다.
+	for idx, menu := range menus {
+		// 있다면 수량만큼 limit--, count++
+		// goroutine으로 실행할지 여부 생각하기
+		bc.MenuModel.LimitAndCountUpdate(menu.ID, menu.Limit, menu.Orderedcount, list.OrderedMenus[idx].Amount)
+	}
+	// 한 개의 주문이기 때문에 dayCount++ 와 주문 추가 작업은 한 번만 해준다.
+	// 그리고 DayOrderCount 1 추가
+	dayCount = bc.OrderedListModel.DayOrderCount(daycountID)
+	// 주문 추가
+	orderNum = bc.OrderedListModel.Add(list)
+
+	c.JSON(200, gin.H{"주문아이디" : orderNum, "오늘 주문번호" : dayCount})
 }
 
 
@@ -204,13 +240,33 @@ func (bc *BuyerController) ChangeOrder(c *gin.Context) {
 	util.ErrorHandler(err)
 
 	order := bc.OrderedListModel.GetOne(changeMenuStruct.OrderId)
-	if (order.Status == "배달중") || (order.Status == "배달완료") {
+	legacyMenu, _ := bc.MenuModel.GetOneMenu(changeMenuStruct.LegacyFoodId)
+	var legacyFoodAmount int
+	for _, menu := range order.OrderedMenus {
+		if menu.MenuId == legacyMenu.ID {
+			legacyFoodAmount = menu.Amount
+		}
+	}
+	newMenu, _ := bc.MenuModel.GetOneMenu(changeMenuStruct.NewMenu.MenuId)
+	// 추가하려는 메뉴가 주문 가능한 수량을 가지고 있는지 확인하는 로직 추가
+	if newMenu.Limit < changeMenuStruct.NewMenu.Amount {
+		c.JSON(400, gin.H{"msg" : "해당 메뉴의 수량이 부족합니다.", "남은 수량" : newMenu.Limit})
+		return
+	} else if (order.Status == "배달중") || (order.Status == "배달완료") {
 		c.JSON(400, gin.H{"msg" : "조리가 완료되어 메뉴 변경이 불가능합니다."})
+		return
 	} else {
 		err := bc.OrderedListModel.ChangeOrder(order, changeMenuStruct)
 		if err != nil {
+			// 원래 주문에 legacyfood가 포함되어 있지 않을 경우 에러 반환
 			c.JSON(400, gin.H{"error" : err.Error()})
+			return
 		} else {
+			// 주문에서 제외한 음식과 변경된 음식의 limit, orderedcount 업데이트 로직 추가
+			// legacy 메뉴에서는 limit++, count--를 해줘야 한다.
+			bc.MenuModel.LimitAndCountUpdate(legacyMenu.ID, legacyMenu.Limit, legacyMenu.Orderedcount, -legacyFoodAmount)
+			// new 메뉴에서는 limit--, count++를 해줘야 한다.
+			bc.MenuModel.LimitAndCountUpdate(newMenu.ID, newMenu.Limit, newMenu.Orderedcount, changeMenuStruct.NewMenu.Amount)
 			c.JSON(200, gin.H{"msg" : "메뉴 변경이 완료되었습니다."})
 		}
 	}
@@ -225,7 +281,7 @@ func (bc *BuyerController) ChangeOrder(c *gin.Context) {
 // @name AddOrder
 // @Accept  json
 // @Produce  json
-// @Param addData body model.AddMenusType true "addData"
+// @Param addData body model.AddMenuType true "addData"
 // @Router /buyer/order/add [patch]
 // @Success 200 {object} string
 func (bc *BuyerController) AddOrder(c *gin.Context) {
@@ -240,15 +296,25 @@ func (bc *BuyerController) AddOrder(c *gin.Context) {
 	order := bc.OrderedListModel.GetOne(addStruct.OrderId)
 	// 이전 주문 메뉴에 현재 추가하려는 메뉴가 있는지 검사
 	for _, value := range order.OrderedMenus {
-		if value.MenuId == addStruct.NewItem {
+		if value.MenuId == addStruct.NewItem.MenuId {
 			c.JSON(400, gin.H{"msg" : "이미 해당 메뉴가 포함되어 있습니다."})
 			return
 		}
 	}
+	newMenu, _ := bc.MenuModel.GetOneMenu(addStruct.NewItem.MenuId)
+	// 새로 추가하고자 하는 메뉴에 대해서 주문 가능한 limit이 있는지를 먼저 확인하는 로직 추가
+	if newMenu.Limit < addStruct.NewItem.Amount {
+		c.JSON(400, gin.H{"msg" : "해당 메뉴의 수량이 부족합니다.", "남은 수량" : newMenu.Limit})
+		return
+	}
 	if (order.Status == "배달중") || (order.Status == "배달완료") {
+		// 주문 수량만큼 limit--, count++ 해주는 로직 추가
+		bc.MenuModel.LimitAndCountUpdate(newMenu.ID, newMenu.Limit, newMenu.Orderedcount, addStruct.NewItem.Amount)
 		id = bc.OrderedListModel.Add(&addStruct.NewOrder)
 		msg = "주문 추가가 불가능하여 새 주문으로 접수되었습니다."
 	} else {
+		// 추가한 메뉴에 대하여 limit과 count를 업로드해주는 로직 추가
+		bc.MenuModel.LimitAndCountUpdate(newMenu.ID, newMenu.Limit, newMenu.Orderedcount, addStruct.NewItem.Amount)
 		id = bc.OrderedListModel.AddOrder(&addStruct, order)
 		msg = "주문 추가가 정상적으로 완료되었습니다."
 	}

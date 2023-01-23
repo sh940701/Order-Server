@@ -99,8 +99,8 @@ func (sc *SellerController) AddMenu(c *gin.Context) {
 // @name DeleteMenu
 // @Accept  json
 // @Produce  json
-// @Param menuId body model.IdType true "menuId"
-// @Router /seller/menu/{menuid} [delete]
+// @Param menuid query string true "menuid"
+// @Router /seller/menu [delete]
 // @Success 200 {object} string
 // @failure 404 {object} string
 func (sc *SellerController) DeleteMenu(c *gin.Context) {
